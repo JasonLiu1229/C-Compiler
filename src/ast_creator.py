@@ -1,23 +1,67 @@
-# import decimal
-# import socket
-# import struct
-# from math import floor
-#
-# from colorama import Fore
-# import copy
 import copy
+import re
+from decimal import Decimal
 
 import antlr4.tree.Tree
-from AST import *
-from SymbolTable import *
-from output.MathParser import MathParser
-from output.MathVisitor import MathVisitor
-from decimal import *
-import re
 
-class AstCreator(MathVisitor):
+from antlr4_output.FileParser import FileParser
+from antlr4_output.FileVisitor import FileVisitor
 
-    def __init__(self, filename: str = None) -> None:
+from .ast import (
+    AST,
+    ArrayDeclAST,
+    ArrayElementAST,
+    AssignAST,
+    BreakAST,
+    CaseAST,
+    CommentAST,
+    CondAST,
+    ContAST,
+    DeclrAST,
+    DefaultAST,
+    DerefAST,
+    Else_CondAST,
+    ExprAST,
+    FactorAST,
+    For_loopAST,
+    FuncCallAST,
+    FuncDeclAST,
+    FuncDefnAST,
+    FuncParametersAST,
+    FuncScopeAST,
+    If_CondAST,
+    IncludeAST,
+    InitAST,
+    InstrAST,
+    PrimaryAST,
+    PrintfAST,
+    ReturnInstr,
+    ScanfAST,
+    Scope_AST,
+    SwitchAST,
+    SwitchScopeAST,
+    TermAST,
+    VarDeclrAST,
+    While_loopAST,
+    conv_promotions,
+    conversions,
+    getType,
+    isfloat,
+    keywords,
+    keywords_datatype,
+)
+from .node import ArrayNode, FuncParameter, Node, VarNode
+from .symbol_entry import (
+    FuncSymbolEntry,
+    FunctionParameter,
+    SymbolEntry,
+)
+from .symbol_table import SymbolTable
+
+
+class AstCreator(FileVisitor):
+
+    def __init__(self, filename: str | None = None) -> None:
         """
         Initializer function
         """
@@ -25,7 +69,7 @@ class AstCreator(MathVisitor):
         self.base_ast: AST = AST()
         self.symbol_table: SymbolTable = SymbolTable()
         self.warnings: list = []
-        self.file_name: str = filename
+        self.file_name: str | None = filename
 
     def visit_child(self, ctx):
         """
@@ -33,92 +77,91 @@ class AstCreator(MathVisitor):
         :param ctx: the context to know what to visit
         :return: the given output given by every visit function (AST or Node)
         """
-        if isinstance(ctx, MathParser.InstrContext):
+        if isinstance(ctx, FileParser.InstrContext):
             return self.visitInstr(ctx)
-        elif isinstance(ctx, MathParser.ExprContext):
+        elif isinstance(ctx, FileParser.ExprContext):
             return self.visitExpr(ctx)
-        elif isinstance(ctx, MathParser.RvarContext):
+        elif isinstance(ctx, FileParser.RvarContext):
             return self.visitRvar(ctx)
-        elif isinstance(ctx, MathParser.RtypeContext):
+        elif isinstance(ctx, FileParser.RtypeContext):
             return self.visitRtype(ctx)
-        elif isinstance(ctx, MathParser.AssignContext):
+        elif isinstance(ctx, FileParser.AssignContext):
             return self.visitAssign(ctx)
-        elif isinstance(ctx, MathParser.LvarContext):
+        elif isinstance(ctx, FileParser.LvarContext):
             return self.visitLvar(ctx)
-        elif isinstance(ctx, MathParser.DerefContext):
+        elif isinstance(ctx, FileParser.DerefContext):
             return self.visitDeref(ctx)
-        elif isinstance(ctx, MathParser.PrintfContext):
+        elif isinstance(ctx, FileParser.PrintfContext):
             return self.visitPrintf(ctx)
-        elif isinstance(ctx, MathParser.Var_declContext):
+        elif isinstance(ctx, FileParser.Var_declContext):
             return self.visitVar_decl(ctx)
-        elif isinstance(ctx, MathParser.DeclrContext):
+        elif isinstance(ctx, FileParser.DeclrContext):
             return self.visitDeclr(ctx)
-        elif isinstance(ctx, MathParser.TermContext):
+        elif isinstance(ctx, FileParser.TermContext):
             return self.visitTerm(ctx)
-        elif isinstance(ctx, MathParser.FactorContext):
+        elif isinstance(ctx, FileParser.FactorContext):
             return self.visitFactor(ctx)
-        elif isinstance(ctx, MathParser.PrimaryContext):
+        elif isinstance(ctx, FileParser.PrimaryContext):
             return self.visitPrimary(ctx)
-        elif isinstance(ctx, MathParser.ScopeContext):
+        elif isinstance(ctx, FileParser.ScopeContext):
             return self.visitScope(ctx)
-        elif isinstance(ctx, MathParser.For_loopContext):
+        elif isinstance(ctx, FileParser.For_loopContext):
             return self.visitFor_loop(ctx)
-        elif isinstance(ctx, MathParser.While_loopContext):
+        elif isinstance(ctx, FileParser.While_loopContext):
             return self.visitWhile_loop(ctx)
-        elif isinstance(ctx, MathParser.If_condContext):
+        elif isinstance(ctx, FileParser.If_condContext):
             return self.visitIf_cond(ctx)
-        elif isinstance(ctx, MathParser.Else_condContext):
+        elif isinstance(ctx, FileParser.Else_condContext):
             return self.visitElse_cond(ctx)
-        elif isinstance(ctx, MathParser.InitContext):
+        elif isinstance(ctx, FileParser.InitContext):
             return self.visitInit(ctx)
-        elif isinstance(ctx, MathParser.CondContext):
+        elif isinstance(ctx, FileParser.CondContext):
             return self.visitCond(ctx)
-        elif isinstance(ctx, MathParser.IncrContext):
+        elif isinstance(ctx, FileParser.IncrContext):
             return self.visitIncr(ctx)
-        elif isinstance(ctx, MathParser.Cont_instrContext):
+        elif isinstance(ctx, FileParser.Cont_instrContext):
             return self.visitCont_instr(ctx)
-        elif isinstance(ctx, MathParser.Break_instrContext):
+        elif isinstance(ctx, FileParser.Break_instrContext):
             return self.visitBreak_instr(ctx)
-        elif isinstance(ctx, MathParser.Func_defnContext):
+        elif isinstance(ctx, FileParser.Func_defnContext):
             return self.visitFunc_defn(ctx)
-        elif isinstance(ctx, MathParser.Func_declContext):
+        elif isinstance(ctx, FileParser.Func_declContext):
             return self.visitFunc_decl(ctx)
-        elif isinstance(ctx, MathParser.Arg_listContext):
+        elif isinstance(ctx, FileParser.Arg_listContext):
             return self.visitArg_list(ctx)
-        elif isinstance(ctx, MathParser.Func_callContext):
+        elif isinstance(ctx, FileParser.Func_callContext):
             return self.visitFunc_call(ctx)
-        elif isinstance(ctx, MathParser.Func_scopeContext):
+        elif isinstance(ctx, FileParser.Func_scopeContext):
             return self.visitFunc_scope(ctx)
-        elif isinstance(ctx, MathParser.Func_argContext):
+        elif isinstance(ctx, FileParser.Func_argContext):
             return self.visitFunc_arg(ctx)
-        elif isinstance(ctx, MathParser.Param_declrContext):
+        elif isinstance(ctx, FileParser.Param_declrContext):
             return self.visitParam_declr(ctx)
-        elif isinstance(ctx, MathParser.Param_listContext):
+        elif isinstance(ctx, FileParser.Param_listContext):
             return self.visitParam_list(ctx)
-        elif isinstance(ctx, MathParser.Return_instrContext):
+        elif isinstance(ctx, FileParser.Return_instrContext):
             return self.visitReturn_instr(ctx)
-        elif isinstance(ctx, MathParser.Array_declContext):
+        elif isinstance(ctx, FileParser.Array_declContext):
             return self.visitArray_decl(ctx)
-        elif isinstance(ctx, MathParser.Array_elContext):
+        elif isinstance(ctx, FileParser.Array_elContext):
             return self.visitArray_el(ctx)
-        elif isinstance(ctx, MathParser.Incl_statContext):
+        elif isinstance(ctx, FileParser.Incl_statContext):
             return self.visitIncl_stat(ctx)
-        elif isinstance(ctx, MathParser.ScanfContext):
+        elif isinstance(ctx, FileParser.ScanfContext):
             return self.visitScanf(ctx)
-        elif isinstance(ctx, MathParser.CompContext):
+        elif isinstance(ctx, FileParser.CompContext):
             return self.visitComp(ctx)
-        elif isinstance(ctx, MathParser.Switch_instrContext):
+        elif isinstance(ctx, FileParser.Switch_instrContext):
             return self.visitSwitch_instr(ctx)
-        elif isinstance(ctx, MathParser.Case_instrContext):
+        elif isinstance(ctx, FileParser.Case_instrContext):
             return self.visitCase_instr(ctx)
-        elif isinstance(ctx, MathParser.Default_instrContext):
+        elif isinstance(ctx, FileParser.Default_instrContext):
             return self.visitDefault_instr(ctx)
-        elif isinstance(ctx, MathParser.Switch_scopeContext):
+        elif isinstance(ctx, FileParser.Switch_scopeContext):
             return self.visitSwitch_scope(ctx)
-        elif isinstance(ctx, MathParser.CommentContext):
+        elif isinstance(ctx, FileParser.CommentContext):
             return self.visitComment(ctx)
-        elif isinstance(ctx, antlr4.tree.Tree.TerminalNodeImpl):
-            if ctx.getText() in ["{", "}"]:
+        elif isinstance(ctx, antlr4.tree.Tree.TerminalNodeImpl) and ctx.getText() in ["{", "}"]:
                 return Node(ctx.getText(), None)
 
     @staticmethod
@@ -178,7 +221,7 @@ class AstCreator(MathVisitor):
     @staticmethod
     def lastDefaultOrCase(index: int, in_list):
         for i in reversed(range(index)):
-            if isinstance(in_list[i], CaseAST) or isinstance(in_list[i], DefaultAST):
+            if isinstance(in_list[i], CaseAST | DefaultAST):
                 return i
             # elif isinstance(in_list[i], BreakAST):
             #     return i - 1
@@ -1553,7 +1596,7 @@ class AstCreator(MathVisitor):
         symbol_table = temp_symbol
         return symbol_table
 
-    def visitMath(self, ctx: MathParser.MathContext):
+    def visitMath(self, ctx: FileParser.MathContext):
         """
         Math visit function
         :param ctx: context
@@ -1564,7 +1607,7 @@ class AstCreator(MathVisitor):
         math_ast.symbolTable.owner = math_ast
         return math_ast
 
-    def visitInstr(self, ctx: MathParser.InstrContext):
+    def visitInstr(self, ctx: FileParser.InstrContext):
         """
         Instruction visit
         :param ctx: context
@@ -1576,7 +1619,7 @@ class AstCreator(MathVisitor):
         instr_ast.line = ctx.start.line
         return instr_ast
 
-    def visitExpr(self, ctx: MathParser.ExprContext):
+    def visitExpr(self, ctx: FileParser.ExprContext):
         """
         Expression visit function
         :param ctx: context
@@ -1592,7 +1635,7 @@ class AstCreator(MathVisitor):
         expr_ast.line = ctx.start.line
         return expr_ast
 
-    def visitPrintf(self, ctx: MathParser.PrintfContext):
+    def visitPrintf(self, ctx: FileParser.PrintfContext):
         """
         Creates the node for printf function
         :param ctx: context
@@ -1641,7 +1684,7 @@ class AstCreator(MathVisitor):
                 out.children.append(new_node)
         return out
 
-    def visitRvar(self, ctx: MathParser.RvarContext):
+    def visitRvar(self, ctx: FileParser.RvarContext):
         """
         Right-hand side variable visit function
         :param ctx: context
@@ -1650,7 +1693,7 @@ class AstCreator(MathVisitor):
         root = Node(keywords[0], ctx.children[0].getText())
         return root
 
-    def visitRtype(self, ctx: MathParser.RtypeContext):
+    def visitRtype(self, ctx: FileParser.RtypeContext):
         """
         Right-hand side type visit function
         :param ctx: context
@@ -1663,7 +1706,7 @@ class AstCreator(MathVisitor):
         else:
             return Node(keywords_datatype[2], ctx.children[0].getText()[1:-1])
 
-    def visitAssign(self, ctx: MathParser.AssignContext):
+    def visitAssign(self, ctx: FileParser.AssignContext):
         """
         Assign operand visit function
         :param ctx: context
@@ -1674,7 +1717,7 @@ class AstCreator(MathVisitor):
         root.line = ctx.start.line
         return root
 
-    def visitDeclr(self, ctx: MathParser.DeclrContext):
+    def visitDeclr(self, ctx: FileParser.DeclrContext):
         """
         Declaration visit function
         :param ctx: context
@@ -1693,7 +1736,7 @@ class AstCreator(MathVisitor):
             raise TypeError(f"Variable declared with invalid type {ctx.children[0].getText()}")
         return out
 
-    def visitVar_decl(self, ctx: MathParser.Var_declContext):
+    def visitVar_decl(self, ctx: FileParser.Var_declContext):
         """
         Variable declaration visit function
         :param ctx: context
@@ -1710,7 +1753,7 @@ class AstCreator(MathVisitor):
             out.line = ctx.start.line
             return out
 
-    def visitLvar(self, ctx: MathParser.LvarContext):
+    def visitLvar(self, ctx: FileParser.LvarContext):
         """
         Left hand side variable
         :param ctx: context
@@ -1725,7 +1768,7 @@ class AstCreator(MathVisitor):
         root = VarNode(ctx.name.text, None, "", ptr=is_ptr, total_deref=ptr_len)
         return root
 
-    def visitDeref(self, ctx: MathParser.DerefContext):
+    def visitDeref(self, ctx: FileParser.DerefContext):
         """
         Dereference visit function
         :param ctx: context
@@ -1738,7 +1781,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitTerm(self, ctx: MathParser.TermContext):
+    def visitTerm(self, ctx: FileParser.TermContext):
         ast = TermAST()
         ast.column = ctx.start.column
         ast.line = ctx.start.line
@@ -1753,7 +1796,7 @@ class AstCreator(MathVisitor):
             return None
         return ast
 
-    def visitFactor(self, ctx: MathParser.FactorContext):
+    def visitFactor(self, ctx: FileParser.FactorContext):
         ast = FactorAST()
         ast.column = ctx.start.column
         ast.line = ctx.start.line
@@ -1763,7 +1806,7 @@ class AstCreator(MathVisitor):
             return None
         return ast
 
-    def visitPrimary(self, ctx: MathParser.PrimaryContext):
+    def visitPrimary(self, ctx: FileParser.PrimaryContext):
         ast = PrimaryAST()
         ast.column = ctx.start.column
         ast.line = ctx.start.line
@@ -1773,37 +1816,37 @@ class AstCreator(MathVisitor):
             return None
         return ast
 
-    def visitScope(self, ctx: MathParser.ScopeContext):
+    def visitScope(self, ctx: FileParser.ScopeContext):
         out = Scope_AST(Node("unnamed", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitIf_cond(self, ctx: MathParser.If_condContext):
+    def visitIf_cond(self, ctx: FileParser.If_condContext):
         out = If_CondAST(Node("If_cond", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitElse_cond(self, ctx: MathParser.Else_condContext):
+    def visitElse_cond(self, ctx: FileParser.Else_condContext):
         out = Else_CondAST(Node("Else_cond", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitWhile_loop(self, ctx: MathParser.While_loopContext):
+    def visitWhile_loop(self, ctx: FileParser.While_loopContext):
         out = While_loopAST(Node("While_loop", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitFor_loop(self, ctx: MathParser.For_loopContext):
+    def visitFor_loop(self, ctx: FileParser.For_loopContext):
         out =  For_loopAST(Node("For_loop", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitInit(self, ctx: MathParser.InitContext):
+    def visitInit(self, ctx: FileParser.InitContext):
         if len(ctx.children) == 1:
             return
         else:
@@ -1817,20 +1860,20 @@ class AstCreator(MathVisitor):
                 raise TypeError(f"Variable declared with invalid type {ctx.children[0].getText()}")
             return out
 
-    def visitCond(self, ctx: MathParser.CondContext):
+    def visitCond(self, ctx: FileParser.CondContext):
         ast = CondAST()
         ast.column = ctx.start.column
         ast.line = ctx.start.line
         # cond : comp | expr
         if len(ctx.children) != 1:
             raise TypeError("Invalid condition")
-        if isinstance(ctx.children[0], MathParser.CompContext):
+        if isinstance(ctx.children[0], FileParser.CompContext):
             ast.root = Node("cond", None)
-        elif isinstance(ctx.children[0], MathParser.ExprContext):
+        elif isinstance(ctx.children[0], FileParser.ExprContext):
             ast.root = Node("expr", "const")
         return ast
 
-    def visitIncr(self, ctx: MathParser.IncrContext):
+    def visitIncr(self, ctx: FileParser.IncrContext):
         if isinstance(ctx.children[0], antlr4.tree.Tree.TerminalNodeImpl):
             # case for rvar INCR and rvar DECR
             out = TermAST(Node("factor", ctx.children[0].getText()))
@@ -1841,25 +1884,25 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitCont_instr(self, ctx: MathParser.Cont_instrContext):
+    def visitCont_instr(self, ctx: FileParser.Cont_instrContext):
         out = ContAST(Node("cont", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitBreak_instr(self, ctx: MathParser.Break_instrContext):
+    def visitBreak_instr(self, ctx: FileParser.Break_instrContext):
         out = BreakAST(Node("break", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitParam_list(self, ctx: MathParser.Param_listContext):
+    def visitParam_list(self, ctx: FileParser.Param_listContext):
         out = FuncParametersAST(Node("parameter", None), parameters=[None for _ in ctx.params])
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitParam_declr(self, ctx: MathParser.Param_declrContext):
+    def visitParam_declr(self, ctx: FileParser.Param_declrContext):
         out = FuncParameter(key=ctx.var.text, value=None, vtype=ctx.type_.text, const=(ctx.const is not None),
                             ptr=(ctx.ptr is not None and len(ctx.ptr) > 0),
                             deref_level=0,
@@ -1870,7 +1913,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitFunc_defn(self, ctx: MathParser.Func_defnContext):
+    def visitFunc_defn(self, ctx: FileParser.Func_defnContext):
         out = FuncDefnAST(root=Node(ctx.name.text, None), const=(ctx.const is not None), return_type=ctx.type_.text,
                            ptr=(len(ctx.ptr) > 0), ptr_level=(len(ctx.ptr)),
                            symbolTable=SymbolTable())
@@ -1881,7 +1924,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitFunc_decl(self, ctx: MathParser.Func_declContext):
+    def visitFunc_decl(self, ctx: FileParser.Func_declContext):
         out = FuncDeclAST(root=Node(ctx.name.text, None), const=(ctx.const is not None), return_type=ctx.type_.text,
                            ptr=(len(ctx.ptr) > 0), ptr_level=(len(ctx.ptr)),
                            symbolTable=SymbolTable())
@@ -1891,17 +1934,17 @@ class AstCreator(MathVisitor):
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
-    def visitFunc_arg(self, ctx: MathParser.Func_argContext):
+    def visitFunc_arg(self, ctx: FileParser.Func_argContext):
         return
 
-    def visitArg_list(self, ctx: MathParser.Arg_listContext):
+    def visitArg_list(self, ctx: FileParser.Arg_listContext):
         """
         :return: Node with name args_list and value the number of arguments
         """
         # return Node("args_list", len(ctx.args))
         return
 
-    def visitFunc_call(self, ctx: MathParser.Func_callContext):
+    def visitFunc_call(self, ctx: FileParser.Func_callContext):
         """
         :return: A FuncCallAST.
         Key is the name of the function being called and value is None.
@@ -1914,7 +1957,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitFunc_scope(self, ctx: MathParser.Func_scopeContext):
+    def visitFunc_scope(self, ctx: FileParser.Func_scopeContext):
         """
         :return: A FuncScopeAST.
         The key is the name of the function it belongs to.
@@ -1926,7 +1969,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitReturn_instr(self, ctx: MathParser.Return_instrContext):
+    def visitReturn_instr(self, ctx: FileParser.Return_instrContext):
         out = ReturnInstr(Node("return", None))
         if ctx.ret_val is None:
             out.root.value = "void"
@@ -1935,7 +1978,7 @@ class AstCreator(MathVisitor):
         return out
 
 
-    def visitScanf(self, ctx: MathParser.ScanfContext):
+    def visitScanf(self, ctx: FileParser.ScanfContext):
         ast = ScanfAST(Node("scanf", None))
         ast.column = ctx.start.column
         ast.line = ctx.start.line
@@ -1963,7 +2006,7 @@ class AstCreator(MathVisitor):
             var.parent = ast
         return ast
 
-    def visitArray_decl(self, ctx: MathParser.Array_declContext):
+    def visitArray_decl(self, ctx: FileParser.Array_declContext):
         ast = ArrayDeclAST(
             VarNode(ctx.name.text + '[]', None, ctx.type_.text, const=(ctx.const is not None), ptr=(len(ctx.ptr) > 0),
                     deref_level=0, total_deref=(len(ctx.ptr) if ctx.ptr is not None else 0),
@@ -1992,7 +2035,7 @@ class AstCreator(MathVisitor):
                 value.parent = ast
         return ast
 
-    def visitArray_el(self, ctx: MathParser.Array_elContext):
+    def visitArray_el(self, ctx: FileParser.Array_elContext):
         element = ArrayElementAST(Node("array_element", None))
         element.column = ctx.start.column
         element.line = ctx.start.line
@@ -2001,7 +2044,7 @@ class AstCreator(MathVisitor):
             element.root.value = int(ctx.index.text)
         return element
 
-    def visitIncl_stat(self, ctx: MathParser.Incl_statContext):
+    def visitIncl_stat(self, ctx: FileParser.Incl_statContext):
         if ctx.library.text != "stdio":
             raise RuntimeError("Unsupported Library")
         out = IncludeAST(Node(f"{ctx.library.text}.h", None))
@@ -2009,7 +2052,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitComp(self, ctx: MathParser.CompContext):
+    def visitComp(self, ctx: FileParser.CompContext):
         # this is just an in-between node for an expression
         # check the operation
         if ctx.op.text in ["&&", "||"]:
@@ -2020,7 +2063,7 @@ class AstCreator(MathVisitor):
         out.line = ctx.start.line
         return out
 
-    def visitSwitch_instr(self, ctx: MathParser.Switch_instrContext):
+    def visitSwitch_instr(self, ctx: FileParser.Switch_instrContext):
         out = SwitchAST(Node("switch", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
@@ -2028,25 +2071,25 @@ class AstCreator(MathVisitor):
         out.has_default = ctx.default is not None
         return out
 
-    def visitCase_instr(self, ctx: MathParser.Case_instrContext):
+    def visitCase_instr(self, ctx: FileParser.Case_instrContext):
         out = CaseAST(Node("case", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitDefault_instr(self, ctx: MathParser.Default_instrContext):
+    def visitDefault_instr(self, ctx: FileParser.Default_instrContext):
         out = DefaultAST(Node("default", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitSwitch_scope(self, ctx: MathParser.Switch_scopeContext):
+    def visitSwitch_scope(self, ctx: FileParser.Switch_scopeContext):
         out = SwitchScopeAST(Node("switch_scope", None))
         out.column = ctx.start.column
         out.line = ctx.start.line
         return out
 
-    def visitComment(self, ctx: MathParser.CommentContext):
+    def visitComment(self, ctx: FileParser.CommentContext):
         out = CommentAST(Node("comment", ctx.com.text))
         if ctx.com.text.startswith("//"):
             out.root.value = "singleline"

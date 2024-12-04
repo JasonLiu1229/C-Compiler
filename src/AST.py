@@ -1,19 +1,22 @@
 import copy
+import json
 import os
 import random
 import re
 import string
 import uuid
-from math import floor
 from array import array
-from typing import Any, Tuple
-from Node import Node, VarNode, FunctionNode, FuncParameter, ArrayNode
+from math import floor
+from typing import Any
+
 import antlr4.error.ErrorListener
 import antlr4.error.ErrorStrategy
-import json
-from SymbolTable import *
 from antlr4.error.Errors import ParseCancellationException
-from register_management import *
+
+from .node import ArrayNode, FuncParameter, FunctionNode, Node, VarNode
+from .register_management import Register, Registers
+from .symbol_entry import FuncSymbolEntry, SymbolEntry
+from .symbol_table import SymbolTable
 
 # Standard Variables
 keywords = ["var", "int", "binary_op", "unary_op", "comp_op", "comp_eq", "bin_log_op", "un_log_op", "assign_op",
@@ -31,11 +34,9 @@ tokens = ['!=', '==', '>', '>=', '<', '<=', '||', '&&', '%', '/', '-', '+', '++'
 
 # TODO: Replace code in the handle function of AstCreator with the handle functions
 
-# ඞ
-
 class ErrorListener(antlr4.error.ErrorListener.ErrorListener):
     def __init__(self):
-        super(ErrorListener, self).__init__()
+        super().__init__()
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         """
@@ -109,7 +110,6 @@ def getTypeFromFormat(inputValue):
         return "string"
     else:
         return None
-# ඞ
 def convert(value, d_type):
     """
     help function for casting
@@ -750,7 +750,6 @@ class AST:
         """
         if child is None:
             return
-        # ඞ
         if not isinstance(child, AST) and not isinstance(child, Node):
             if not isinstance(child, AST):
                 raise TypeError("child must be set to an AST")
@@ -791,7 +790,6 @@ class AST:
             self.dic_count[self.root.key] += 1
         else:
             name = f"\"{self.root.key}\""
-        # ඞ
         out = {name: self.root.value}
         if out[name] is None:
             out[name] = []
@@ -843,7 +841,6 @@ class AST:
     def dot_language(self, file_name, symbol_table: dict = None):
         """
         Create dot language format file
-        ඞ
         :param symbol_table:
         :param file_name: String that determines the file name
         :return: None
@@ -859,7 +856,7 @@ class AST:
 
     def connect(self, file_name: str):
         """
-        connects the dictionary items together, to form a completed dot format file ඞ
+        connects the dictionary items together, to form a completed dot format file
         :return: None
         """
         with open(str(file_name), "w") as f:
@@ -1125,7 +1122,7 @@ class AST:
     def comp_eq(var_type: str, op1: str, op2: str):
         """
         Writes LLVM code for an "is equal" operation
-        :param var_type: the type of return value ඞ
+        :param var_type: the type of return value
         :param op1: the first operand
         :param op2: the second operand
         """
@@ -1329,7 +1326,6 @@ class PrintfAST(AST):
         evaluate = True
         for child in self.children:
             child.parent = self
-        # ඞ
         # replace all the arguments
         for i in range(len(self.args)):
             if isinstance(self.args[i], Node) and self.args[i].key == "string":
@@ -1543,7 +1539,6 @@ class PrintfAST(AST):
                 index += 1
         return out, index
 
-    # ඞ
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         out = ""
@@ -1750,7 +1745,6 @@ class PrintfAST(AST):
                                     # add spaces to the left of the string
                                     arg = " " * (self.width - len(str(arg))) + str(arg)
                         format_[i] = arg
-                        # ඞ
         return format_
 
     @staticmethod
@@ -1900,7 +1894,6 @@ class PrintfAST(AST):
                     out_local += f"chr_{var.key if isinstance(var, VarNode) else var.value}\n"
                     out_local += f"\tli $v0, 4\n"
                 out_local += "\tsyscall\n"
-                # ඞ
         # out_list = [registers.argumentManager.head.name]
         # self.register = registers.argumentManager.head
         # self.register.object = self.root

@@ -1,7 +1,7 @@
 import copy
 
-from SymbolEntry import *
-from Node import VarNode, FunctionNode
+from .node import FunctionNode, VarNode
+from .symbol_entry import FuncSymbolEntry, SymbolEntry
 
 
 class SymbolTable:
@@ -11,7 +11,7 @@ class SymbolTable:
         self.owner = in_owner
 
     def __repr__(self):
-        out = f""
+        out = ""
         for entry in self.table:
             out += f"| {entry.__repr__()} "
         return out + "|"
@@ -34,9 +34,7 @@ class SymbolTable:
         return matching
 
     def exists(self, in_object: object | str) -> bool:
-        if len(self.lookup(in_object)) == 0:
-            return False
-        return True
+        return len(self.lookup(in_object)) != 0
 
     def insert(self, in_object: SymbolEntry, index: int = 0):
         """
@@ -53,8 +51,6 @@ class SymbolTable:
         return self.table[index]
 
     def update(self, in_object: VarNode | FunctionNode) -> bool:
-        if not (isinstance(in_object, VarNode) or isinstance(in_object, FunctionNode)):
-            return False
         for entry in self.table:
             if entry.object == in_object:
                 entry.object = copy.deepcopy(in_object)
@@ -62,6 +58,7 @@ class SymbolTable:
                     match = self.lookup(entry.object.parent)[0].object
                     match.value = entry.object
                 return True
+        return False
 
     def refresh(self):
         for entry in self.table:
@@ -91,8 +88,7 @@ class SymbolTable:
                     new_length += len(element.get_str()) + 2
                 if new_length > max_width:
                     max_width = new_length
-            if isinstance(entry, SymbolEntry) and entry.object is not None:
-                if entry.object.ptr:
+            if isinstance(entry, SymbolEntry) and entry.object and entry.object.ptr:
                     new_length = 0
                     temp_value = entry.object.value
                     while isinstance(temp_value, VarNode):

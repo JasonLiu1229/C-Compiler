@@ -1,8 +1,7 @@
 import os
 
-from register_management import *
-from SymbolTable import *
-from AST import *
+from .ast import AST, CommentAST, FuncDeclAST, FuncDefnAST, IncludeAST, InstrAST
+from .register_management import Registers
 
 
 class MIPS:
@@ -24,9 +23,7 @@ class MIPS:
             if temp not in visited:
                 # if a scope, skip
                 # if include instruction, skip
-                if isinstance(temp, FuncDeclAST) or isinstance(temp, FuncDefnAST) or \
-                        isinstance(temp, IncludeAST) or (isinstance(temp, CommentAST) and temp.parent is self.ast)\
-                        or (isinstance(temp, InstrAST) and temp.parent is self.ast):
+                if isinstance(temp, FuncDeclAST | FuncDefnAST | IncludeAST) or (isinstance(temp, CommentAST) and temp.parent is self.ast) or (isinstance(temp, InstrAST) and temp.parent is self.ast):
                     visited.append(temp)
                 if isinstance(temp, AST):
                     for child in temp.children:
@@ -68,11 +65,11 @@ class MIPS:
                 variables += f"\t.align 2\n\t{key}: .space 4\n"
             for key in self.registers.globalObjects.uninitialized[3]: # array
                 if key.type == "int":
-                    variables += f"\t.align 2\n\tint_{key.key}: .space {str((key.size + 1) * 4)}\n"
+                    variables += f"\t.align 2\n\tint_{key.key}: .space {(key.size + 1) * 4!s}\n"
                 elif key.type == "float":
-                    variables += f"\t.align 2\n\tflt_{key.key}: .space {str((key.size + 1) * 4)}\n"
+                    variables += f"\t.align 2\n\tflt_{key.key}: .space {(key.size + 1) * 4!s}\n"
                 elif key.type == "char":
-                    variables += f"\t.align 0\t\n\tchr_{key.key}: .space {str(key.size + 1)}\n"
+                    variables += f"\t.align 0\t\n\tchr_{key.key}: .space {key.size + 1!s}\n"
             variables += ".text\n"
             f.write(variables)
             f.write(global_str)
@@ -96,7 +93,7 @@ class MIPS:
             os.system(f"java -jar ../Help/Mars4_5_Mod.jar {self.mips} > ../MIPS_output/logs/{out_file}.log.txt")
 
             # open the log file and print the output
-            with open(f"../MIPS_output/logs/{out_file}.log.txt", "r") as f:
+            with open(f"../MIPS_output/logs/{out_file}.log.txt") as f:
                 out = f.read()
                 out = out.replace("MARS 4.5  Copyright 2003-2014 Pete Sanderson and Kenneth Vollmar\n\n", "")
             if not silent:
@@ -109,7 +106,7 @@ class MIPS:
             out_file = self.mips.split('/')[-1].split('.')[0]
             os.system(f"spim -file {self.mips} > ../MIPS_output/logs/{out_file}.log.txt")
             # open the log file and print the output
-            with open(f"../MIPS_output/logs/{out_file}.log.txt", "r") as f:
+            with open(f"../MIPS_output/logs/{out_file}.log.txt") as f:
                 out = f.read()
                 out = out.replace("SPIM Version 8.0 of January 8, 2010\nCopyright 1990-2010, James R. Larus.\n"
                                   "All Rights Reserved.\nSee the file README for a full copyright notice.\n"
@@ -126,7 +123,7 @@ class MIPS:
             os.system(f"java -jar ../Help/Mars4_5_Mod.jar {self.mips} > ../MIPS_output/logs/{out_file}.log.txt")
             os.system(f"spim -file {self.mips} >> ../MIPS_output/logs/{out_file}.log.txt")
             # open the log file and print the output
-            with open(f"../MIPS_output/logs/{out_file}.log.txt", "r") as f:
+            with open(f"../MIPS_output/logs/{out_file}.log.txt") as f:
                 out = f.read()
                 out = out.replace("MARS 4.5  Copyright 2003-2014 Pete Sanderson and Kenneth Vollmar\n\n", "")
                 out = out.replace("SPIM Version 8.0 of January 8, 2010\n"
@@ -255,7 +252,7 @@ class MIPS:
     def allocate_stack():
         # Allocate every register to stack
         out = "allocate_stack:\n"
-        out += f"\taddi $sp, $sp, -100\n"
+        out += "\taddi $sp, $sp, -100\n"
         count = 0
         for i in range(2,32):
             if i in [26, 27, 28, 29, 30]:
@@ -263,7 +260,7 @@ class MIPS:
                 continue
             out += f"\tsw ${i}, {(i - count)*4}($sp)\n"
         # jump back to function
-        out += f"\tjr $ra\n\n"
+        out += "\tjr $ra\n\n"
         return out
 
     @staticmethod
@@ -276,7 +273,7 @@ class MIPS:
                 count += 1
                 continue
             out += f"\tlw ${i}, {(i - count)*4}($sp)\n"
-        out += f"\taddi $sp, $sp, 100\n"
+        out += "\taddi $sp, $sp, 100\n"
         # jump back to function
-        out += f"\tjr $ra\n\n"
+        out += "\tjr $ra\n\n"
         return out

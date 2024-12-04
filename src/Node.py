@@ -1,7 +1,5 @@
 from array import array
 from math import floor
-from pprint import pprint
-from typing import Tuple
 
 
 class Node:

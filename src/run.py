@@ -1,15 +1,28 @@
-import sys
-from antlr4 import *
-from output.MathLexer import MathLexer
-from AstCreator import *
-from LLVM import *
-from MIPS import *
-import os
 import argparse
-import Dot
+import contextlib
+import os
 
-def run(directory: str, file_type: str, filenames: list, verbose: bool = True, no_warning: bool = False,
-        execute_with: str = None, disclaimer: bool = True, silent: bool = False, visualise: bool = False):
+from antlr4 import CommonTokenStream, FileStream
+
+from antlr4_output.FileLexer import FileLexer
+from antlr4_output.FileParser import FileParser
+
+from .ast import ErrorListener
+from .ast_creator import AstCreator
+from .mips import MIPS
+
+
+def run(
+    directory: str,
+    file_type: str,
+    filenames: list,
+    verbose: bool = True,
+    no_warning: bool = False,
+    execute_with: str | None = None,
+    disclaimer: bool = True,
+    silent: bool = False,
+    visualise: bool = False,
+):
     for filename in filenames:
         try:
             # code in blue
@@ -18,8 +31,8 @@ def run(directory: str, file_type: str, filenames: list, verbose: bool = True, n
             # Create error listener
             error_listener = ErrorListener()
             # Create lexer and parser
-            lexer = MathLexer(input_stream)
-            parser = MathParser(CommonTokenStream(lexer))
+            lexer = FileLexer(input_stream)
+            parser = FileParser(CommonTokenStream(lexer))
             # Remove previous error listener and add new error listener to lexer
             lexer.removeErrorListeners()
             lexer.addErrorListener(error_listener)
@@ -27,7 +40,7 @@ def run(directory: str, file_type: str, filenames: list, verbose: bool = True, n
             parser.removeErrorListeners()
             parser.addErrorListener(error_listener)
             # Parse the input stream
-            parse_tree = parser.math()
+            parse_tree = parser.file_()
             # create ast
             visitor = AstCreator(filename=directory + filename + file_type)
             ast = visitor.visit(parse_tree)
@@ -65,54 +78,131 @@ def run(directory: str, file_type: str, filenames: list, verbose: bool = True, n
         except Exception as e:
             # code in red if error
             # log the error
-            try:
+            with contextlib.suppress(Exception):
                 if verbose and not silent:
                     ast.print(4, True, filename)
                     ast.symbolTable.print(True)
-            except:
-                pass
 
-            print(f'\033[91m\n>>> Error: {e}\033[0m\n')
+            print(f"\033[91m\n>>> Error: {e}\033[0m\n")
             with open(f"../MIPS_output/logs/{filename}.log.txt", "w") as f:
                 f.write(f"Error: {e}\n")
             continue
 
+
 def main():
-    parser = argparse.ArgumentParser(prog="Compiler", description="Compiles the C files")
-    parser.add_argument('-d', '--directory', help='directory of the file that needs to be parsed', required=True)
-    parser.add_argument('-t', '--type', help='file type that needs to be checked', required=True)
-    parser.add_argument('-a', '--all', action='store_true', help='this flag defines that all files will be checked')
-    parser.add_argument('-f', '--files', nargs='+', help='this flag will define which specific files we want to test')
-    parser.add_argument('-i', '--index', help='index of which file it is in the directory')
-    parser.add_argument('-v', '--verbose', action='store_true', help='this flag will print the AST')
-    parser.add_argument('-nw', '--no-warning', action='store_true', help='this flag will not print the warnings')
-    parser.add_argument('-e', '--execute-with', help='this flag will execute the mips code with the given program',
-                        default=None, choices=["mars", "spim", "both"], type=str.lower, required=False)
-    parser.add_argument('-s', '--silent', action='store_true', help='this flag will not print the output of the program')
+    parser = argparse.ArgumentParser(
+        prog="Compiler", description="Compiles the C files"
+    )
+    parser.add_argument(
+        "-d",
+        "--directory",
+        help="directory of the file that needs to be parsed",
+        required=True,
+    )
+    parser.add_argument(
+        "-t", "--type", help="file type that needs to be checked", required=True
+    )
+    parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        help="this flag defines that all files will be checked",
+    )
+    parser.add_argument(
+        "-f",
+        "--files",
+        nargs="+",
+        help="this flag will define which specific files we want to test",
+    )
+    parser.add_argument(
+        "-i", "--index", help="index of which file it is in the directory"
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="this flag will print the AST"
+    )
+    parser.add_argument(
+        "-nw",
+        "--no-warning",
+        action="store_true",
+        help="this flag will not print the warnings",
+    )
+    parser.add_argument(
+        "-e",
+        "--execute-with",
+        help="this flag will execute the mips code with the given program",
+        default=None,
+        choices=["mars", "spim", "both"],
+        type=str.lower,
+        required=False,
+    )
+    parser.add_argument(
+        "-s",
+        "--silent",
+        action="store_true",
+        help="this flag will not print the output of the program",
+    )
     # disclaimer
-    parser.add_argument('-nd', '--no-disclaimer', action='store_true', help='this flag will not print the disclaimer')
+    parser.add_argument(
+        "-nd",
+        "--no-disclaimer",
+        action="store_true",
+        help="this flag will not print the disclaimer",
+    )
     # visualise
-    parser.add_argument('-vs', '--visualise', action='store_true', help='this flag will create a dot file and a png file')
+    parser.add_argument(
+        "-vs",
+        "--visualise",
+        action="store_true",
+        help="this flag will create a dot file and a png file",
+    )
     # try:
     args = parser.parse_args()
     filenames = args.files if args.files is not None else []
     if args.files is not None:
-        run(directory=args.directory, file_type=args.type, filenames=args.files, verbose=args.verbose,
-            no_warning=args.no_warning, execute_with=args.execute_with, disclaimer=not args.no_disclaimer,
-            silent=args.silent, visualise=args.visualise)
+        run(
+            directory=args.directory,
+            file_type=args.type,
+            filenames=args.files,
+            verbose=args.verbose,
+            no_warning=args.no_warning,
+            execute_with=args.execute_with,
+            disclaimer=not args.no_disclaimer,
+            silent=args.silent,
+            visualise=args.visualise,
+        )
     elif args.index is not None:
         files = os.listdir(args.directory)
-        files_one = [files[int(args.index) - 1][:len(files[int(args.index) - 1]) - len(args.type)]]
-        run(directory=args.directory, file_type=args.type, filenames=files_one, verbose=args.verbose,
-            no_warning=args.no_warning, execute_with=args.execute_with, disclaimer=not args.no_disclaimer,
-            silent=args.silent, visualise=args.visualise)
+        files_one = [
+            files[int(args.index) - 1][
+                : len(files[int(args.index) - 1]) - len(args.type)
+            ]
+        ]
+        run(
+            directory=args.directory,
+            file_type=args.type,
+            filenames=files_one,
+            verbose=args.verbose,
+            no_warning=args.no_warning,
+            execute_with=args.execute_with,
+            disclaimer=not args.no_disclaimer,
+            silent=args.silent,
+            visualise=args.visualise,
+        )
     else:
         for file in os.listdir(args.directory):
             if file.endswith(args.type):
-                filenames.append(file[:len(file) - len(args.type)])
-        run(directory=args.directory, file_type=args.type, filenames=filenames, verbose=args.verbose,
-            no_warning=args.no_warning, execute_with=args.execute_with, disclaimer=not args.no_disclaimer,
-            silent=args.silent, visualise=args.visualise)
+                filenames.append(file[: len(file) - len(args.type)])
+        run(
+            directory=args.directory,
+            file_type=args.type,
+            filenames=filenames,
+            verbose=args.verbose,
+            no_warning=args.no_warning,
+            execute_with=args.execute_with,
+            disclaimer=not args.no_disclaimer,
+            silent=args.silent,
+            visualise=args.visualise,
+        )
     expected_outputs = []
     actual_outputs = []
     # for filename in filenames:
@@ -123,5 +213,6 @@ def main():
     # # except Exception as e:
     #     print(f'Excepted with error \"{e}\"')
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

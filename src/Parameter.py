@@ -1,4 +1,6 @@
-from AST import FuncParameter
+from .ast import FuncParameter
+
+
 class FunctionParameter:
     def __init__(self, in_object: FuncParameter) -> None:
         self.type = in_object.type

@@ -1,4 +1,5 @@
-from Node import Node, VarNode
+from .node import VarNode
+
 
 class Manager:  # Manager class for register management using LRU
     """
@@ -53,7 +54,7 @@ class Manager:  # Manager class for register management using LRU
                 continue
             if isinstance(in_object, VarNode):
                 if temp_head.object == in_object:
-                    in_object.register   = temp_head
+                    in_object.register = temp_head
                     return temp_head
             else:
                 if temp_head.object.key == in_object.value:
@@ -103,8 +104,8 @@ class Manager:  # Manager class for register management using LRU
             tempHead = tempHead.next
         return None
 
-class returnManager(Manager):
 
+class returnManager(Manager):
     def __init__(self) -> None:
         super().__init__(2)
         self.head = Register(in_name="v0", in_manager=self)
@@ -161,10 +162,11 @@ class returnManager(Manager):
 
 
 class argumentManager(Manager):
-
     def __init__(self) -> None:
         super().__init__(4)
-        list_objects = [Register(in_name="a" + str(i), in_manager=self) for i in range(0, 4)]
+        list_objects = [
+            Register(in_name="a" + str(i), in_manager=self) for i in range(0, 4)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[-1]
         for i in range(3):
@@ -217,7 +219,9 @@ class argumentManager(Manager):
             self.tail = tempHead
 
     def clear(self):
-        list_objects = [Register(in_name="a" + str(i), in_manager=self) for i in range(0, 4)]
+        list_objects = [
+            Register(in_name="a" + str(i), in_manager=self) for i in range(0, 4)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[-1]
         for i in range(3):
@@ -226,10 +230,11 @@ class argumentManager(Manager):
 
 
 class temporaryManager(Manager):
-
     def __init__(self) -> None:
         super().__init__(8)
-        list_objects = [Register(in_name="t" + str(i), in_manager=self) for i in range(0, 8)]
+        list_objects = [
+            Register(in_name="t" + str(i), in_manager=self) for i in range(0, 8)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[7]
         for i in range(0, 7):
@@ -280,7 +285,9 @@ class temporaryManager(Manager):
             self.tail = tempHead
 
     def clear(self):
-        list_objects = [Register(in_name="t" + str(i), in_manager=self) for i in range(0, 8)]
+        list_objects = [
+            Register(in_name="t" + str(i), in_manager=self) for i in range(0, 8)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[7]
         for i in range(0, 7):
@@ -290,10 +297,11 @@ class temporaryManager(Manager):
 
 
 class savedManager(Manager):
-
     def __init__(self) -> None:
         super().__init__(8)
-        list_objects = [Register(in_name="s" + str(i), in_manager=self) for i in range(0, 8)]
+        list_objects = [
+            Register(in_name="s" + str(i), in_manager=self) for i in range(0, 8)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[7]
         for i in range(0, 7):
@@ -343,7 +351,9 @@ class savedManager(Manager):
             self.tail = tempHead
 
     def clear(self):
-        list_objects = [Register(in_name="s" + str(i), in_manager=self) for i in range(0, 8)]
+        list_objects = [
+            Register(in_name="s" + str(i), in_manager=self) for i in range(0, 8)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[7]
         for i in range(0, 7):
@@ -353,7 +363,6 @@ class savedManager(Manager):
 
 
 class reservedManager(Manager):
-
     def __init__(self) -> None:
         super().__init__(4)
         self.head = Register(in_name="k0", in_manager=self)
@@ -410,10 +419,11 @@ class reservedManager(Manager):
 
 
 class floatManager(Manager):
-
     def __init__(self) -> None:
         super().__init__(32)
-        list_objects = [Register(in_name="f" + str(i), in_manager=self) for i in range(0, 32)]
+        list_objects = [
+            Register(in_name="f" + str(i), in_manager=self) for i in range(0, 32)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[31]
         for i in range(0, 31):
@@ -463,7 +473,9 @@ class floatManager(Manager):
             self.tail = tempHead
 
     def clear(self):
-        list_objects = [Register(in_name="f" + str(i), in_manager=self) for i in range(0, 32)]
+        list_objects = [
+            Register(in_name="f" + str(i), in_manager=self) for i in range(0, 32)
+        ]
         self.head = list_objects[0]
         self.tail = list_objects[31]
         for i in range(0, 31):
@@ -471,8 +483,8 @@ class floatManager(Manager):
         for i in range(1, 32):
             list_objects[i].prev = list_objects[i - 1]
 
-class singleManager:
 
+class singleManager:
     def __init__(self) -> None:
         self.gp = Register(in_name="gp")
         self.sp = Register(in_name="sp")
@@ -482,6 +494,7 @@ class singleManager:
         self.at = Register(in_name="at")
         self.lo = Register(in_name="lo")
         self.hi = Register(in_name="hi")
+
     def clear(self):
         self.gp = Register(in_name="gp")
         self.sp = Register(in_name="sp")
@@ -512,12 +525,21 @@ class singleManager:
         else:
             return None
 
+
 class dataManager:
     def __init__(self) -> None:
-        self.data: [] = [{}, {}, {}, {}, {}, {}] # ASCII, float, word, half-word, byte, space
-        self.uninitialized: [] = [[], [], [], []] # char, float, word, array
+        self.data: [] = [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+        ]  # ASCII, float, word, half-word, byte, space
+        self.uninitialized: [] = [[], [], [], []]  # char, float, word, array
         self.index = 0
         self.stackSize = 0
+
 
 class Registers:
     def __init__(self) -> None:
@@ -596,9 +618,17 @@ class Registers:
         elif register_name.startswith("v"):
             self.returnManager.shuffle_name(register_name)
 
-class Register:
 
-    def __init__(self, in_prev=None, in_next=None, in_object=None, in_register=None, in_name=None, in_manager=None) -> None:
+class Register:
+    def __init__(
+        self,
+        in_prev=None,
+        in_next=None,
+        in_object=None,
+        in_register=None,
+        in_name=None,
+        in_manager=None,
+    ) -> None:
         self.name = in_name
         self.prev = in_prev
         self.next = in_next
@@ -619,4 +649,3 @@ class Register:
 
     def shuffle(self):
         self.manager.shuffle(self)
-

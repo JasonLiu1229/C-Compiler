@@ -1,8 +1,8 @@
-from Parameter import *
+from .parameter import FunctionParameter
 
 
 class SymbolEntry:
-    def __init__(self, in_object, in_name: str = None, in_type: str = None, in_const: bool = None, in_array: bool = False) -> None:
+    def __init__(self, in_object, in_name: str | None = None, in_type: str | None = None, in_const: bool | None = None, in_array: bool = False) -> None:
         self.object = in_object
         if in_name is None:
             self.name = self.object.key
@@ -48,27 +48,21 @@ class SymbolEntry:
 
     def print(self):
         print("{:<2}{:<8}{:<2}{:<8}{:<2}{:<15}{:<2}{:<12}{:<2}{:<8}{:<2}".format('|', 'const', '|', 'type', '|',  'name', '|', 'value', '|', 'used', '|'))
-        if self.const:
-            const = 'const'
-        else:
-            const = 'None'
+        const = "const" if self.const else "None"
         if self.object.value is None and not self.array:
             value = "None"
         elif self.array:
             value = self.object.values
         else:
             value = self.object.value
-        if self.used:
-            used = 'True'
-        else:
-            used = 'False'
+        used = "True" if self.used else "False"
         print("{:<2}{:<8}{:<2}{:<8}{:<2}{:<15}{:<2}{:<12}{:<2}{:<8}{:<2}".format('|', const, '|', self.type, '|', self.name, '|',
                                                                        value, '|', used, '|'))
 
 
 class FuncSymbolEntry(SymbolEntry):
-    def __init__(self, in_object, in_name: str = None, in_type: str = None, in_const: bool = None,
-                 in_parameters: list[FunctionParameter] = None) -> None:
+    def __init__(self, in_object, in_name: str | None = None, in_type: str | None = None, in_const: bool | None = None,
+                 in_parameters: list[FunctionParameter] | None = None) -> None:
         super().__init__(in_object, in_name, in_type, in_const)
         self.parameters = in_parameters
         if self.parameters is None:
@@ -95,7 +89,7 @@ class FuncSymbolEntry(SymbolEntry):
         return not self.__eq__(o)
 
     def get_str(self):
-        out = f""
+        out = ""
         for par in self.parameters:
             out += par.get_str()
             if self.parameters.index(par) != len(self.parameters) - 1:
@@ -103,7 +97,7 @@ class FuncSymbolEntry(SymbolEntry):
         return out
 
 class VarSymbolEntry(SymbolEntry):
-    def __init__(self, in_object, in_name: str, in_type: str, in_const: bool = None, in_ptr: bool = None) -> None:
+    def __init__(self, in_object, in_name: str, in_type: str, in_const: bool | None = None, in_ptr: bool | None = None) -> None:
         super().__init__(in_object, in_name, in_type, in_const)
         self.is_ptr = in_ptr
 
