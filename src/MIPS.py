@@ -85,15 +85,15 @@ class MIPS:
         """
         if execute_with == "mars":
             if disclaimer:
-                os.system("java -jar ../Help/Mars4_5_Mod.jar " + self.mips)
+                os.system("java -jar ./Help/Mars4_5_Mod.jar " + self.mips)
                 return
-            # get the filename without extension and directory. filename has format: ../MIPS_output/filename.asm
+            # get the filename without extension and directory. filename has format: ./MIPS_output/filename.asm
             out_file = self.mips.split('/')[-1].split('.')[0]
 
-            os.system(f"java -jar ../Help/Mars4_5_Mod.jar {self.mips} > ../MIPS_output/logs/{out_file}.log.txt")
+            os.system(f"java -jar ./Help/Mars4_5_Mod.jar {self.mips} > ./MIPS_output/logs/{out_file}.log.txt")
 
             # open the log file and print the output
-            with open(f"../MIPS_output/logs/{out_file}.log.txt") as f:
+            with open(f"./MIPS_output/logs/{out_file}.log.txt") as f:
                 out = f.read()
                 out = out.replace("MARS 4.5  Copyright 2003-2014 Pete Sanderson and Kenneth Vollmar\n\n", "")
             if not silent:
@@ -102,11 +102,11 @@ class MIPS:
             if disclaimer:
                 os.system("spim -file " + self.mips)
                 return
-            # get the filename without extension and directory. filename has format: ../MIPS_output/filename.asm
+            # get the filename without extension and directory. filename has format: ./MIPS_output/filename.asm
             out_file = self.mips.split('/')[-1].split('.')[0]
-            os.system(f"spim -file {self.mips} > ../MIPS_output/logs/{out_file}.log.txt")
+            os.system(f"spim -file {self.mips} > ./MIPS_output/logs/{out_file}.log.txt")
             # open the log file and print the output
-            with open(f"../MIPS_output/logs/{out_file}.log.txt") as f:
+            with open(f"./MIPS_output/logs/{out_file}.log.txt") as f:
                 out = f.read()
                 out = out.replace("SPIM Version 8.0 of January 8, 2010\nCopyright 1990-2010, James R. Larus.\n"
                                   "All Rights Reserved.\nSee the file README for a full copyright notice.\n"
@@ -115,15 +115,15 @@ class MIPS:
                 print(out)
         elif execute_with == "both":
             if disclaimer:
-                os.system("java -jar ../Help/Mars4_5_Mod.jar " + self.mips)
+                os.system("java -jar ./Help/Mars4_5_Mod.jar " + self.mips)
                 os.system("spim -file " + self.mips)
                 return
-            # get the filename without extension and directory. filename has format: ../MIPS_output/filename.asm
+            # get the filename without extension and directory. filename has format: ./MIPS_output/filename.asm
             out_file = self.mips.split('/')[-1].split('.')[0]
-            os.system(f"java -jar ../Help/Mars4_5_Mod.jar {self.mips} > ../MIPS_output/logs/{out_file}.log.txt")
-            os.system(f"spim -file {self.mips} >> ../MIPS_output/logs/{out_file}.log.txt")
+            os.system(f"java -jar ./Help/Mars4_5_Mod.jar {self.mips} > ./MIPS_output/logs/{out_file}.log.txt")
+            os.system(f"spim -file {self.mips} >> ./MIPS_output/logs/{out_file}.log.txt")
             # open the log file and print the output
-            with open(f"../MIPS_output/logs/{out_file}.log.txt") as f:
+            with open(f"./MIPS_output/logs/{out_file}.log.txt") as f:
                 out = f.read()
                 out = out.replace("MARS 4.5  Copyright 2003-2014 Pete Sanderson and Kenneth Vollmar\n\n", "")
                 out = out.replace("SPIM Version 8.0 of January 8, 2010\n"

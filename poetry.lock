@@ -23,6 +23,20 @@ files = [
 ]
 
 [[package]]
+name = "antlr4-tools"
+version = "0.2.1"
+description = "Tools to run ANTLR4 tool and grammar interpreter/profiler"
+optional = false
+python-versions = "*"
+files = [
+    {file = "antlr4-tools-0.2.1.tar.gz", hash = "sha256:eabad95c7d6b2e15b9875f630e6695395f90ed557721aeef7844d5821ac1ca6a"},
+    {file = "antlr4_tools-0.2.1-py3-none-any.whl", hash = "sha256:71bfe6d5f856cbf69e69c4ad1750eb8f2c84e72b07780efabced6a8e5194f2e4"},
+]
+
+[package.dependencies]
+install-jdk = "*"
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -116,6 +130,17 @@ python-versions = ">=3.7"
 files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
+]
+
+[[package]]
+name = "install-jdk"
+version = "1.1.0"
+description = "install-jdk allows you to easily install latest Java OpenJDK version. Supports OpenJDK builds from Adoptium (previously AdoptOpenJDK), Corretto, and Zulu. Simplify your Java development with the latest OpenJDK builds."
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "install_jdk-1.1.0-py3-none-any.whl", hash = "sha256:b63f0fcd63f7abab3443d4120ba92716397753b8a8ea3c85762a629925a9936e"},
+    {file = "install_jdk-1.1.0.tar.gz", hash = "sha256:2bfd53caf660e4916df0215a5715519dcb9547fa2a5f07421fd97a8046851eaa"},
 ]
 
 [[package]]
@@ -355,4 +380,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4512664a5361bc212649fca5aa1ba0c3b1bbec1821a8498d80a48bc7ebb0df7e"
+content-hash = "2f3edc54fa780732559a987e6ded249e1806763171ebd75a799e34d812294fee"
