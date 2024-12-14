@@ -10,5 +10,6 @@ int main(){
         printf("%f; ", 20.0*0.5);
         printf("%d; ", 20/2);
         printf("%f; ", 5.0/0.5);
+
         return 1;
 }
