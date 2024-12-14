@@ -1596,7 +1596,7 @@ class AstCreator(FileVisitor):
         symbol_table = temp_symbol
         return symbol_table
 
-    def visitMath(self, ctx: FileParser.MathContext):
+    def visitFile(self, ctx: FileParser.FileContext):
         """
         Math visit function
         :param ctx: context
