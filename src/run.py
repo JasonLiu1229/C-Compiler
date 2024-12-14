@@ -1,15 +1,17 @@
 import argparse
 import contextlib
 import os
+import subprocess
 
 from antlr4 import CommonTokenStream, FileStream
 
 from antlr4_output.FileLexer import FileLexer
 from antlr4_output.FileParser import FileParser
+from src.ast import AST
 
 from .ast import ErrorListener
 from .ast_creator import AstCreator
-from .mips import MIPS
+from .mips import ExecuteWith, Mips
 
 
 class ExecutionError(Exception):
@@ -26,11 +28,11 @@ def run_file(
     filename: str,
     verbose: bool = True,
     no_warning: bool = False,
-    execute_with: str | None = None,
+    execute_with: ExecuteWith | None = None,
     disclaimer: bool = True,
     silent: bool = False,
     visualise: bool = False,
-) -> None:
+) -> subprocess.CompletedProcess[str] | None:
     try:
         ast, generator = generate_mips_code(
             directory, file_type, filename, verbose, no_warning, silent, visualise
@@ -40,7 +42,7 @@ def run_file(
 
     try:
         if execute_with is not None:
-            generator.execute(execute_with, disclaimer, silent)
+            return generator.execute(execute_with, silent)
     except Exception as e:
         with contextlib.suppress(Exception):
             if verbose and not silent:
@@ -52,7 +54,7 @@ def run_file(
 
 def generate_mips_code(
     directory, file_type, filename, verbose, no_warning, silent, visualise
-):
+) -> tuple[AST, Mips]:
     file_path = os.path.join(directory, filename + file_type)
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
@@ -89,13 +91,13 @@ def generate_mips_code(
     if not no_warning and not silent:
         visitor.warn()
         # create dot file
-    if visualise:
-        ast.dot_language(filename, visitor.symbol_table)
-        # generator = LLVM(ast,  "../Output/" + filename + ".ll")
-        # generator.convert()
-        # generator.execute()
+    # if visualise:
+    #     ast.dot_language(filename, visitor.symbol_table)
+    # generator = LLVM(ast,  "../Output/" + filename + ".ll")
+    # generator.convert()
+    # generator.execute()
 
-    generator = MIPS(ast, f"./MIPS_output/{filename}.asm")
+    generator = Mips(ast, f"./MIPS_output/{filename}.asm")
     generator.convert()
     return ast, generator
 
@@ -106,14 +108,14 @@ def run(
     filenames: list,
     verbose: bool = True,
     no_warning: bool = False,
-    execute_with: str | None = None,
+    execute_with: ExecuteWith | None = None,
     disclaimer: bool = True,
     silent: bool = False,
     visualise: bool = False,
-):
+) -> subprocess.CompletedProcess[str] | None:
     for filename in filenames:
         try:
-            run_file(
+            return run_file(
                 directory,
                 file_type,
                 filename,
@@ -126,6 +128,7 @@ def run(
             )
         except ExecutionError as e:
             raise RuntimeError(f"Failed to execute {filename}") from e
+    return None
 
 
 def main():
@@ -204,7 +207,7 @@ def main():
             filenames=args.files,
             verbose=args.verbose,
             no_warning=args.no_warning,
-            execute_with=args.execute_with,
+            execute_with=ExecuteWith(args.execute_with),
             disclaimer=not args.no_disclaimer,
             silent=args.silent,
             visualise=args.visualise,
@@ -219,7 +222,7 @@ def main():
             ],
             verbose=args.verbose,
             no_warning=args.no_warning,
-            execute_with=args.execute_with,
+            execute_with=ExecuteWith(args.execute_with),
             disclaimer=not args.no_disclaimer,
             silent=args.silent,
             visualise=args.visualise,
@@ -236,7 +239,7 @@ def main():
             filenames=filenames,
             verbose=args.verbose,
             no_warning=args.no_warning,
-            execute_with=args.execute_with,
+            execute_with=ExecuteWith(args.execute_with),
             disclaimer=not args.no_disclaimer,
             silent=args.silent,
             visualise=args.visualise,
