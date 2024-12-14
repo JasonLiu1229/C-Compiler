@@ -1,7 +1,11 @@
-from AST import *
+import copy
+
+from .ast import AST
+from .ast_creator import FuncDeclAST, FuncDefnAST, ReturnInstr
+from .node import Node
 
 
-class dot:
+class Dot:
     def __init__(self, in_ast: AST, in_filename: str = "../Output/ast.dor") -> None:
         self.dot = {}
         self.ast: AST = in_ast

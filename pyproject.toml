@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "Compiler"
+version = "1.0.0"
+description = "A compiler for a subset of the C language"
+authors = [
+  "Orfeo Terkuçi <Orfeo.Terkuci@student.uantwerpen.be>",
+  "Jason Liu <Jason.Liu@student.uantwerpen.be>",
+]
+
+packages = [
+  { include = "src", from = "." },
+  { include = "antlr4_output", from = "." },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+antlr4-python3-runtime = "^4.13.2"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.8.1"
+antlr4-tools = "^0.2.1"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.4"
+pytest-cov = "^6.0.0"
+pydantic = "^2.10.3"
+
+[tool.pytest.ini_options]
+# addopts = "--cov=src --cov-report=term-missing -ra -v"
+
+testpaths = ["tests"]
+
+[tool.ruff]
+include = ["*.py"]
+exclude = ["antlr4_output"]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["RUF", "E", "F", "UP", "B", "SIM", "I", "N", "RET"]
+ignore = ["E501"]
+
+[tool.pyright]
+include = ["tests"]

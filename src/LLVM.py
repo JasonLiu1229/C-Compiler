@@ -1,13 +1,21 @@
-import copy
 import subprocess
 from array import array
-from AST import *
-from SymbolTable import *
+
+from .ast import (
+    AST,
+    ArrayDeclAST,
+    FuncDeclAST,
+    FuncDefnAST,
+    IncludeAST,
+    PrintfAST,
+    ScanfAST,
+)
+from .node import FunctionNode, Node
 
 
 class LLVM:
 
-    def __init__(self, input_ast: AST = None,
+    def __init__(self, input_ast: AST | None = None,
                  file_name: str = "../Output/Output.ll") -> None:
         """
 
