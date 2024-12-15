@@ -32,11 +32,7 @@ keywords = [
     "const_var",
 ]
 keywords_datatype = ["int", "float", "char"]
-# keywords_binary = ["binary_op", "comp_op", "comp_eq", "bin_log_op", "un_log_op"]
-# keywords_unary = ["unary_op"]
-# keywords_indecr = ["incr", "decr"]
-# keywords_assign = ["assign_op"]
-# keywords_functions = ["printf"]
+
 conversions = [
     ("float", "int"),
     ("int", "char"),
@@ -71,7 +67,7 @@ class ErrorListener(antlr4.error.ErrorListener.ErrorListener):
     def __init__(self):
         super().__init__()
 
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):  # noqa: N802, N803
         """
         Gives an error when there is a syntax error
         :return: a syntax error class
@@ -95,9 +91,16 @@ class ErrorListener(antlr4.error.ErrorListener.ErrorListener):
         out = f"Error at line {line!s}:{column!s} : {msg}\nLine where it occurred: {line_text}"
         raise ParseCancellationException(out)
 
-    def reportAmbiguity(
-        self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
-    ):
+    def reportAmbiguity(  # noqa: N802
+        self,
+        recognizer,
+        dfa,
+        startIndex,  # noqa: N803
+        stopIndex,  # noqa: N803
+        exact,
+        ambigAlts,  # noqa: N803
+        configs,
+    ) -> None:
         """
         Gives an error when there is an ambiguity
         :return: None
@@ -108,7 +111,7 @@ class ErrorListener(antlr4.error.ErrorListener.ErrorListener):
         )
 
 
-def isfloat(string):
+def isfloat(string) -> bool:
     """
     Checks if inout is a float
     :param string: input variable
@@ -121,32 +124,32 @@ def isfloat(string):
         return False
 
 
-def checkType(inputStr: str):
-    if inputStr.isdigit():
+def check_type(input: str):
+    if input.isdigit():
         return "int"
-    if isfloat(inputStr):
+    if isfloat(input):
         return "float"
     return "char"
 
 
-def getType(inputValue):
-    if isinstance(inputValue, int):
+def get_type(value):
+    if isinstance(value, int):
         return "int"
-    if isinstance(inputValue, float):
+    if isinstance(value, float):
         return "float"
-    if isinstance(inputValue, str):
+    if isinstance(value, str):
         return "char"
     return None
 
 
-def getTypeFromFormat(inputValue):
-    if inputValue == "d":
+def get_type_from_format(value):
+    if value == "d":
         return "int"
-    if inputValue == "f":
+    if value == "f":
         return "float"
-    if inputValue == "c":
+    if value == "c":
         return "char"
-    if inputValue == "s":
+    if value == "s":
         return "string"
     return None
 
@@ -175,21 +178,21 @@ def convert(value, d_type):
             if isinstance(value, str):
                 return value
             return chr(value)
-    except Exception:
-        raise RuntimeError("Bad Cast")
+    except Exception as err:
+        raise RuntimeError("Bad Cast") from err
 
 
-def getLLVMType(ObjectType: str) -> str | None:
-    if ObjectType == "int":
+def get_llvm_type(object_type: str) -> str | None:
+    if object_type == "int":
         return "i32"
-    if ObjectType == "float":
+    if object_type == "float":
         return "float"
-    if ObjectType == "char":
+    if object_type == "char":
         return "i8"
     return None
 
 
-def visited_list_DFS(ast) -> list:
+def visited_list_dfs(ast) -> list:
     not_visited = [ast]
     visited = []
     while len(not_visited) > 0:
@@ -197,21 +200,16 @@ def visited_list_DFS(ast) -> list:
         if v not in visited:
             if not (isinstance(v, Node) or v is ast):
                 visited.append(v)
-            if (
-                not isinstance(v, While_loopAST)
-                or not isinstance(v, FuncDeclAST)
-                or not isinstance(v, If_CondAST)
-                or not isinstance(v, FuncDefnAST)
-                or not isinstance(v, For_loopAST)
+            if isinstance(v, AST) and not isinstance(
+                v, WhileLoopAST | FuncDeclAST | IfCondAST | FuncDefnAST | ForLoopAST
             ):
-                if isinstance(v, AST):
-                    for i in v.children:
-                        if i is not ast:
-                            not_visited.append(i)
+                for i in v.children:
+                    if i is not ast:
+                        not_visited.append(i)
     return visited
 
 
-def visited_list_DFS2(ast) -> list:
+def visited_list_dfs2(ast) -> list:
     not_visited = [ast]
     visited = []
     while len(not_visited) > 0:
@@ -220,27 +218,22 @@ def visited_list_DFS2(ast) -> list:
             visited.append(v)
             if isinstance(v, Node):
                 continue
-            if (
-                not isinstance(v, While_loopAST)
-                or not isinstance(v, FuncDeclAST)
-                or not isinstance(v, If_CondAST)
-                or not isinstance(v, FuncDefnAST)
-                or not isinstance(v, For_loopAST)
+            if isinstance(v, AST) and not isinstance(
+                v, WhileLoopAST | FuncDeclAST | IfCondAST | FuncDefnAST | ForLoopAST
             ):
-                if isinstance(v, AST):
-                    for i in v.children:
-                        if i is not ast:
-                            not_visited.append(i)
+                for i in v.children:
+                    if i is not ast:
+                        not_visited.append(i)
     return visited
 
 
 class AST:
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
     ):
         """
         Initializer function.
@@ -254,7 +247,7 @@ class AST:
         self.children: list[Node] | list[AST] | [] = children
         self.parent: AST | None = parent
         self.dic_count = {"instr": 0, "expr": 0}
-        self.symbolTable: SymbolTable | None = symbolTable
+        self.symbolTable: SymbolTable | None = symbol_table
         self.register = None
         self.blocks = []
         self.column = None
@@ -263,13 +256,7 @@ class AST:
         self.in_func = False
         self.stack_indexes = []
 
-    # def __eq__(self, o: object) -> bool:
-    #     return( self.root == o.root) and (self.children == o.children) and (self.parent == o.parent)
-    #
-    # def __ne__(self, o: object) -> bool:
-    #     return not self.__eq__(o)
-
-    def delete_unused_variables(self, filename=None):
+    def delete_unused_variables(self, filename: str | None = None):
         variables = []
         warnings = []
         for entry in self.symbolTable.table:
@@ -286,7 +273,7 @@ class AST:
             key=lambda x: x.object.parent.line if x.object.parent is not None else 0,
             reverse=True,
         )
-        visited = visited_list_DFS2(self)
+        visited = visited_list_dfs2(self)
         visited = [i for i in visited if isinstance(i, Node)]
         for entry in variables:
             entry.owner.remove(entry)
@@ -307,16 +294,18 @@ class AST:
                     ):
                         temp_parent.parent.children.remove(temp_parent)
                     temp_parent = temp_parent.parent
-            line = open(filename).readlines()[entry.object.parent.line - 1]
-            line = (
-                line[: entry.object.parent.column]
-                + "\u0332"
-                + line[entry.object.parent.column :]
-            )
-            warnings.append(
-                f"\033[95mwarning: \033[0m Unused variable {entry.name}\n"
-                f"{entry.object.parent.line}:{entry.object.parent.column}:\t{line}"
-            )
+            if filename:
+                with open(filename) as f:
+                    line = f.readlines()[entry.object.parent.line - 1]
+                line = (
+                    line[: entry.object.parent.column]
+                    + "\u0332"
+                    + line[entry.object.parent.column :]
+                )
+                warnings.append(
+                    f"\033[95mwarning: \033[0m Unused variable {entry.name}\n"
+                    f"{entry.object.parent.line}:{entry.object.parent.column}:\t{line}"
+                )
         return warnings
 
     def variable_check(self):
@@ -336,12 +325,11 @@ class AST:
 
         variables = []
         for i in visited:
-            if isinstance(i, Node):
-                if isinstance(i, VarNode) or i.key == "var":
-                    variables.append(i)
+            if isinstance(i, VarNode) or i.key == "var":
+                variables.append(i)
         return variables
 
-    def globalCheck(self) -> bool:
+    def global_check(self) -> bool:
         """
         Check if the current node is in the global scope
         * yes: return True
@@ -387,17 +375,18 @@ class AST:
         self.register = self.root.register
         return out_local, out_global, []
 
-    def searchBlocks(self):
-        if isinstance(self, While_loopAST):
+    def search_blocks(self):
+        if isinstance(self, WhileLoopAST):
             return self.blocks
         temp_parent = self.parent
-        while self.parent is not None and isinstance(self.parent, Scope_AST):
-            if isinstance(temp_parent, Scope_AST) and not isinstance(
-                temp_parent, While_loopAST
+        while self.parent is not None and isinstance(self.parent, ScopeAST):
+            if isinstance(temp_parent, ScopeAST) and not isinstance(
+                temp_parent, WhileLoopAST
             ):
                 temp_parent = temp_parent.parent
             else:
                 return temp_parent.blocks
+        return None
 
     def llvm_global(self, index: int = 1) -> tuple[str, int]:
         """
@@ -408,146 +397,93 @@ class AST:
         out = ""
         return out, index
 
-    def visitLLVMOp(self, current, index: int) -> tuple[str, int]:
+    def visit_llvm_op(self, current, index: int) -> tuple[str, int]:
         out = ""
-        indexL, indexR = 0, 0
-        leftChild = current.children[0]
-        rightChild = None
+        index_l = 0.0
+        index_r = 0, 0
+        left_child = current.children[0]
+        right_child = None
         rentry = None
         lentry = None
         if len(current.children) > 1:
-            rightChild = current.children[1]
+            right_child = current.children[1]
 
-            if isinstance(rightChild, VarNode):
-                rentry, length = self.getEntry(rightChild)
+            if isinstance(right_child, VarNode):
+                rentry, length = self.get_entry(right_child)
+                if rentry is not None and rentry.register is None:
+                    index_r = index
+                    rentry.register = index
+                    index += 1
                 if rentry is not None:
-                    if rentry.register is None:
-                        indexR = index
-                        rentry.register = index
-                        index += 1
-                if rentry is not None:
-                    indexR = rentry.register
-                    out += f"\t%{index} load {getLLVMType(rightChild.type)}, ptr %{indexR}, align 4\n"
+                    index_r = rentry.register
+                    out += f"\t%{index} load {get_llvm_type(right_child.type)}, ptr %{index_r}, align 4\n"
                     index += 1
             else:
-                indexR = rightChild.value
+                index_r = right_child.value
 
-        if isinstance(leftChild, VarNode):
-            lentry, length = self.getEntry(leftChild)
+        if isinstance(left_child, VarNode):
+            lentry, length = self.get_entry(left_child)
             if lentry is not None:
-                if lentry is not None:
-                    if lentry.register is None:
-                        indexL = index
-                        lentry.register = index
-                        index += 1
-                out += f"\t%{index} = load {getLLVMType(leftChild.type)}, ptr %{indexL}, align 4\n"
+                if lentry is not None and lentry.register is None:
+                    index_l = index
+                    lentry.register = index
+                    index += 1
+                out += f"\t%{index} = load {get_llvm_type(left_child.type)}, ptr %{index_l}, align 4\n"
                 index += 1
         else:
-            indexL = leftChild.value
+            index_l = left_child.value
 
         operand = current.root.value
-        currenType = None
-        if isinstance(leftChild, VarNode):
-            currenType = leftChild.type
-        elif isinstance(rightChild, VarNode):
-            currenType = rightChild
+        current_type = None
+        if isinstance(left_child, VarNode):
+            current_type = left_child.type
+        elif isinstance(right_child, VarNode):
+            current_type = right_child
         else:
-            currenType = leftChild.key
-        convertedType = getLLVMType(currenType)
+            current_type = left_child.key
+        converted_type = get_llvm_type(current_type)
 
         if operand == "<":
-            out += (
-                f"\t%{index} = "
-                + self.comp_lt(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.comp_lt(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == ">":
-            out += (
-                f"\t%{index} = "
-                + self.comp_gt(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.comp_gt(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "==":
-            out += (
-                f"\t%{index} = "
-                + self.comp_eq(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.comp_eq(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "!=":
-            out += (
-                f"\t%{index} = "
-                + self.comp_neq(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.comp_neq(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "<=":
-            out += (
-                f"\t%{index} = "
-                + self.comp_leq(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.comp_leq(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == ">=":
-            out += (
-                f"\t%{index} = "
-                + self.comp_geq(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.comp_geq(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "&&":
-            out += (
-                f"\t%{index} = "
-                + self.and_op(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.and_op(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "||":
-            out += (
-                f"\t%{index} = "
-                + self.or_op(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.or_op(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "+":
-            out += (
-                f"\t%{index} = "
-                + self.add(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.add(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "-":
-            out += (
-                f"\t%{index} = "
-                + self.sub(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.sub(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "/":
-            out += (
-                f"\t%{index} = "
-                + self.div(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.div(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "*":
-            out += (
-                f"\t%{index} = "
-                + self.mul(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.mul(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "%":
-            out += (
-                f"\t%{index} = "
-                + self.mod(convertedType, f"%{indexL}", f"%{indexR}")
-                + "\n"
-            )
+            out += f"\t%{index} = {self.mod(converted_type, f"%{index_l}", f"%{index_r}")}\n"
         elif operand == "++":
-            out += f"\t%{index} = " + self.incr(convertedType, f"%{indexL}") + "\n"
+            out += f"\t%{index} = {self.incr(converted_type, f"%{index_l}")}\n"
         elif operand == "--":
-            out += f"\t%{index} = " + self.decr(convertedType, f"%{indexL}") + "\n"
+            out += f"\t%{index} = {self.decr(converted_type, f"%{index_l}")}\n"
 
         if isinstance(current, CondAST):
             pass
         else:
             current.parent.children[current.parent.children.index(current)] = Node(
-                currenType, index
+                current_type, index
             )
             index += 1
         return out, index
 
-    def visitMIPSOp(self, current, registers):
+    def visit_mips_op(self, current, registers):
         out_local = ""
         out_global = ""
         out_list = []
@@ -562,14 +498,8 @@ class AST:
             right_node = copy.copy(current.children[1])
         # find the register for the variable
         left_register = registers.search(left_node)
-        # output = left_node.mips(registers)
-        # out_local += output[0]
-        # out_list += output[2]
         if right_node is not None:
             right_register = registers.search(right_node)
-            # output = right_node.mips(registers)
-            # out_local += output[0]
-            # out_list += output[2]
         # register assignment
         if isinstance(left_node, VarNode):
             if isinstance(left_node.parent, VarNode):
@@ -613,15 +543,9 @@ class AST:
                     right_register = right_node.register.name
 
         if left_type is None and left_register is not None:
-            if left_register.startswith("f"):
-                left_type = "float"
-            else:
-                left_type = "int"
+            left_type = "float" if left_register.startswith("f") else "int"
         if right_type is None and right_register is not None:
-            if right_register.startswith("f"):
-                right_type = "float"
-            else:
-                right_type = "int"
+            right_type = "float" if right_register.startswith("f") else "int"
         # create a new node
         new_node = Node("", None)
         if current.root.register is not None:
@@ -869,10 +793,9 @@ class AST:
         return out_local, out_global, [_ for _ in out_list if _ is not None]
 
     @staticmethod
-    def getEntry(entry):
-        if isinstance(entry, Node):
-            if isinstance(entry.parent, ArrayNode):
-                return entry.parent, 1
+    def get_entry(entry):
+        if isinstance(entry, Node) and isinstance(entry.parent, ArrayNode):
+            return entry.parent, 1
         out = None
         temp_symbol = None if isinstance(entry, Node) else entry.symbolTable
         temp_parent = entry.parent
@@ -922,7 +845,7 @@ class AST:
         saves the ast in a dictionary
         :return: the dictionary
         """
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         else:
@@ -937,10 +860,10 @@ class AST:
             out["children"] = [child.save() for child in self.children]
         return out
 
-    def getDict(self):
+    def to_dict(self):
         return {self.root.key: self.root.value}, self.root.key
 
-    def save_dot(self, dictionary_function: dict = None):
+    def save_dot(self, dictionary_function: dict | None = None):
         """
         saves the ast in a dot format in a dictionary
         :return: dot format dictionary
@@ -955,25 +878,6 @@ class AST:
             out[name] = []
         else:
             out["children"] = []
-
-        # # Check symbol table for functions
-        # try:
-        #     for val in dictionary_function.values():
-        #         function_dict = {}
-        #         if isinstance(val, VarNode):
-        #             continue
-        #         elif isinstance(val[0], FunctionNode):
-        #             function_dict[val[0].key] = []
-        #             for i in val:
-        #                 parameter_array = []
-        #                 count = 0
-        #                 for j in i.value.values():
-        #                     parameter_array.append("par" + str(count) + "=" + str(j.value))
-        #                     count += 1
-        #                 function_dict[val[0].key].append(parameter_array)
-        #         out[name].append(function_dict)
-        # except Exception as e:
-        #     raise e
 
         # The rest
         for i in range(len(self.children)):
@@ -1003,7 +907,7 @@ class AST:
                 json.dump(output, outfile, indent=indent)
         print(json.dumps(output, indent=indent))
 
-    def dot_language(self, file_name, symbol_table: dict = None):
+    def dot_language(self, file_name, symbol_table: dict | None = None):
         """
         Create dot language format file
         :param symbol_table:
@@ -1066,7 +970,7 @@ class AST:
                 visited.append(current)
                 if isinstance(current, Node):
                     continue
-                if isinstance(current, FuncScopeAST) or isinstance(current, Scope_AST):
+                if isinstance(current, FuncScopeAST | ScopeAST):
                     current.children.reverse()
                 for child in current.children:
                     if child is not None:
@@ -1076,16 +980,9 @@ class AST:
             f.write("\t// Nodes:\n")
             # declare all the nodes. no edges yet
             for node in visited:
-                if (
-                    isinstance(node, FuncScopeAST)
-                    or isinstance(node, Scope_AST)
-                    or isinstance(node, IncludeAST)
-                ):
+                if isinstance(node, FuncScopeAST | ScopeAST | IncludeAST):
                     continue
-                if isinstance(node, Node):
-                    new_key = node.key
-                else:
-                    new_key = node.root.key
+                new_key = node.key if isinstance(node, Node) else node.root.key
                 if new_key not in nodes:
                     nodes[new_key] = [node]
                     if (
@@ -1098,7 +995,7 @@ class AST:
                         out = f'\t"{new_key}" [label="{node.root.value if node.root.value is not None else new_key}"];\n'
                 else:
                     nodes[new_key].append(node)
-                    if isinstance(node, InstrAST) or isinstance(node, FuncDefnAST):
+                    if isinstance(node, InstrAST | FuncDefnAST):
                         continue
                     if isinstance(node, Node):
                         out = f'\t"{new_key}_{len(nodes[new_key]) - 1!s}" [label="{node.value if node.value is not None else new_key}"];\n'
@@ -1112,7 +1009,7 @@ class AST:
             visited.reverse()
             # connect the nodes
             for node in visited:
-                if isinstance(node, FuncScopeAST) or isinstance(node, Scope_AST):
+                if isinstance(node, FuncScopeAST | ScopeAST):
                     if in_func:
                         f.write(new_out)
                         f.write("\t}\n")
@@ -1123,14 +1020,12 @@ class AST:
                     new_out = ""
                     in_func = True
                     continue
-                if isinstance(node, Node) or isinstance(node, IncludeAST):
+                if isinstance(node, Node | IncludeAST):
                     continue
                 new_key = node.root.key
                 if node.children is not None:
                     for child in node.children:
-                        if isinstance(child, FuncScopeAST) or isinstance(
-                            child, Scope_AST
-                        ):
+                        if isinstance(child, FuncScopeAST | ScopeAST):
                             continue
                         if isinstance(child, Node):
                             child_key = child.key
@@ -1377,7 +1272,9 @@ class AST:
 
 
 class ExprAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -1394,11 +1291,11 @@ class ExprAST(AST):
 
         if self.root.value == "+":
             node = self.children[0] + self.children[1]
-            node_type = checkType(str(node.value))
+            node_type = check_type(str(node.value))
             node.key = node_type
         elif self.root.value == "-":
             node = self.children[0] - self.children[1]
-            node_type = checkType(str(node.value))
+            node_type = check_type(str(node.value))
             node.key = node_type
 
         # convert the value of first operand to int
@@ -1452,7 +1349,7 @@ class ExprAST(AST):
         out_local += temp_output[0]
         out_global += temp_output[1]
         out_list += temp_output[2]
-        output = self.visitMIPSOp(self, registers)
+        output = self.visit_mips_op(self, registers)
         out_local += output[0]
         out_global += output[1]
         out_list += output[2]
@@ -1460,7 +1357,9 @@ class ExprAST(AST):
 
 
 class InstrAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -1485,12 +1384,12 @@ class InstrAST(AST):
 class PrintfAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        format_string: str = None,
+        format_string: str | None = None,
         args=None,
-        format_specifiers: list = None,
+        format_specifiers: list | None = None,
     ):
         super().__init__(root, children, parent)
         if args is None:
@@ -1531,7 +1430,7 @@ class PrintfAST(AST):
                         raise Exception("Ambiguous variable name")
                     self.args[i] = matches[0]
                     var_type = self.args[i].type
-                    format_type = getTypeFromFormat(self.format_specifiers[i][-1])
+                    format_type = get_type_from_format(self.format_specifiers[i][-1])
                     if var_type == format_type:
                         continue
                     # check if the type of the variable matches
@@ -1586,27 +1485,26 @@ class PrintfAST(AST):
                             )
                         else:
                             raise TypeError("Invalid type for printf")
-                elif isinstance(current_child, Node):
-                    if not isinstance(current_child.value, int):
-                        if isinstance(current_child.value, float):
-                            current_child.value = int(current_child.value)
-                            if not current_child.cast:
-                                warnings.append(
-                                    "Implicit conversion from 'float' to 'int'"
-                                )
-                        elif (
-                            isinstance(current_child.value, str)
-                            and len(current_child.value) == 1
-                        ):
-                            current_child.value = ord(current_child.value)
-                        elif current_child.value is None:
-                            current_child.value = (
-                                random.randint(0, 10**length)
-                                if length > 0
-                                else random.randint(0, 10)
-                            )
-                        else:
-                            raise TypeError("Invalid type for printf")
+                elif isinstance(current_child, Node) and not isinstance(
+                    current_child.value, int
+                ):
+                    if isinstance(current_child.value, float):
+                        current_child.value = int(current_child.value)
+                        if not current_child.cast:
+                            warnings.append("Implicit conversion from 'float' to 'int'")
+                    elif (
+                        isinstance(current_child.value, str)
+                        and len(current_child.value) == 1
+                    ):
+                        current_child.value = ord(current_child.value)
+                    elif current_child.value is None:
+                        current_child.value = (
+                            random.randint(0, 10**length)
+                            if length > 0
+                            else random.randint(0, 10)
+                        )
+                    else:
+                        raise TypeError("Invalid type for printf")
                 if isinstance(current_child, VarNode):
                     current_child.type = "int"
                 else:
@@ -1627,23 +1525,22 @@ class PrintfAST(AST):
                             current_child.value = random.randint(0, 10**length)
                         else:
                             raise TypeError("Invalid type for printf")
-                elif isinstance(current_child, Node):
-                    if not isinstance(current_child.value, int):
-                        if isinstance(current_child.value, float):
-                            current_child.value = int(current_child.value)
-                            if not current_child.cast:
-                                warnings.append(
-                                    "Implicit conversion from 'float' to 'int'"
-                                )
-                        elif (
-                            isinstance(current_child.value, str)
-                            and len(current_child.value) == 1
-                        ):
-                            current_child.value = ord(current_child.value)
-                        elif current_child.value is None:
-                            current_child.value = random.randint(0, 10**length)
-                        else:
-                            raise TypeError("Invalid type for printf")
+                elif isinstance(current_child, Node) and not isinstance(
+                    current_child.value, int
+                ):
+                    if isinstance(current_child.value, float):
+                        current_child.value = int(current_child.value)
+                        if not current_child.cast:
+                            warnings.append("Implicit conversion from 'float' to 'int'")
+                    elif (
+                        isinstance(current_child.value, str)
+                        and len(current_child.value) == 1
+                    ):
+                        current_child.value = ord(current_child.value)
+                    elif current_child.value is None:
+                        current_child.value = random.randint(0, 10**length)
+                    else:
+                        raise TypeError("Invalid type for printf")
 
                 if isinstance(current_child, VarNode):
                     current_child.type = "int"
@@ -1708,42 +1605,38 @@ class PrintfAST(AST):
                             current_child.value = random.uniform(0, 10**length)
                         else:
                             raise TypeError("Invalid type for printf")
-                elif isinstance(current_child, Node):
-                    if not isinstance(current_child.value, float):
-                        if isinstance(current_child.value, int):
-                            current_child.value = array("f", [current_child.value])[0]
+                elif isinstance(current_child, Node) and not isinstance(
+                    current_child.value, float
+                ):
+                    if isinstance(current_child.value, int):
+                        current_child.value = array("f", [current_child.value])[0]
+                        warnings.append("Implicit conversion from 'int' to 'float'")
+                    elif (
+                        isinstance(current_child.value, str)
+                        and len(current_child.value) == 1
+                    ):
+                        current_child.value = array("f", [ord(current_child.value)])[0]
+                        if not current_child.cast:
                             warnings.append(
-                                "Implicit conversion from 'int' to 'float'"
+                                "Implicit conversion from 'char' to 'float'"
                             )
-                        elif (
-                            isinstance(current_child.value, str)
-                            and len(current_child.value) == 1
-                        ):
-                            current_child.value = array(
-                                "f", [ord(current_child.value)]
-                            )[0]
-                            if not current_child.cast:
-                                warnings.append(
-                                    "Implicit conversion from 'char' to 'float'"
-                                )
-                        elif current_child.value is None:
-                            current_child.value = random.uniform(0, 10**length)
-                        else:
-                            raise TypeError("Invalid type for printf")
+                    elif current_child.value is None:
+                        current_child.value = random.uniform(0, 10**length)
+                    else:
+                        raise TypeError("Invalid type for printf")
 
             if current_specifier[-1] == "s":
-                if isinstance(current_child, VarNode):
-                    if not current_child.type == "char" or not current_child.array:
-                        raise TypeError("Invalid type for printf")
+                if isinstance(current_child, VarNode) and (
+                    not current_child.type == "char" or not current_child.array
+                ):
+                    raise TypeError("Invalid type for printf")
                 if isinstance(current_child, Node):
                     if current_child.value is None:
                         current_child.value = str(uuid.uuid1())
                     else:
                         if isinstance(current_child.value, str):
                             current_child.value = current_child.value
-                        elif isinstance(current_child.value, int) or isinstance(
-                            current_child.value, float
-                        ):
+                        elif isinstance(current_child.value, int | float):
                             current_child.value = "\0"
                             warnings.append(
                                 "Warning: format specifies type 'char *' but the argument has type 'int'"
@@ -1752,20 +1645,12 @@ class PrintfAST(AST):
                             raise TypeError("Invalid type for printf")
 
             # check the length of format specifiers and child
-            if length != 0:
-                # convert child value to string
-                if isinstance(current_child, Node):
-                    if length > len(str(current_child.value)):
-                        current_child.value = str(current_child.value).rjust(
-                            length, " "
-                        )
-            # if not current_child.known:
-            #     new_node = Node("var", current_child.key)
-            #     new_node.known = current_child.known
-            #     new_node.parent = current_child.parent
-            #     new_node.type = current_child.type
-            #     self.children[i] = new_node
-            #     self.args[i] = new_node
+            if (
+                length != 0
+                and isinstance(current_child, Node)
+                and length > len(str(current_child.value))
+            ):
+                current_child.value = str(current_child.value).rjust(length, " ")
         return self, warnings
 
     def llvm_global(self, index: int = 1) -> tuple[str, int]:
@@ -1787,25 +1672,23 @@ class PrintfAST(AST):
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         out = ""
         var_string = ""
-        count = 0
-        self.updateRegisters()
-        for var in self.args:
-            temp_type = getLLVMType(getType(var.value))
+        self.update_registers()
+        for index, var in enumerate(self.args):
+            temp_type = get_llvm_type(get_type(var.value))
 
             if isinstance(var, Node):
                 if var.key == "string":
                     temp_type = "ptr"
                 var_string += f"{temp_type if temp_type != 'float' else 'double'} noundef {'@str.' if var.key == 'string' else ''}{var.register if var.register is not None else var.value}"
             else:
-                entry, length = self.getEntry(var)
+                entry, length = self.get_entry(var)
                 var += f"{temp_type if temp_type != 'float' else 'double'} noundef %{entry.register}"
-            if count + 1 != len(self.args):
+            if index + 1 != len(self.args):
                 var_string += ", "
-            count += 1
         out += f"call i32 (ptr, ...) @printf(ptr noundef @.str.{self.register if self.register is not None else ''}{', ' if len(var_string) > 0 else ''}{var_string})\n"
         return out, index
 
-    def updateRegisters(self):
+    def update_registers(self):
         for i in range(len(self.args)):
             self.args[i].register = self.children[i].register
 
@@ -1913,10 +1796,7 @@ class PrintfAST(AST):
                         arg = temp_arg.object
                     elif isinstance(temp_arg, FuncCallAST):
                         arg = temp_arg.root
-                        if arg.register is not None:
-                            arg = arg.register
-                        else:
-                            arg = arg.value
+                        arg = arg.register if arg.register is not None else arg.value
                     elif isinstance(temp_arg, ArrayElementAST):
                         arg = temp_arg
                         # if reg is not None:
@@ -1938,16 +1818,15 @@ class PrintfAST(AST):
                             format_[i] = arg
                             continue
                         # if the integer is shorter than the size
-                        if isinstance(arg, str):
-                            if len(str(arg)) < self.width:
-                                # if the integer is left-aligned
-                                if left_align:
-                                    # add spaces to the right of the integer
-                                    arg = str(arg) + " " * (self.width - len(str(arg)))
-                                # if the integer is right-aligned
-                                else:
-                                    # add spaces to the left of the integer
-                                    arg = " " * (self.width - len(str(arg))) + str(arg)
+                        if isinstance(arg, str) and len(str(arg)) < self.width:
+                            # if the integer is left-aligned
+                            if left_align:
+                                # add spaces to the right of the integer
+                                arg = str(arg) + " " * (self.width - len(str(arg)))
+                            # if the integer is right-aligned
+                            else:
+                                # add spaces to the left of the integer
+                                arg = " " * (self.width - len(str(arg))) + str(arg)
                         format_[i] = arg
                     # if the format specifier is a floating-point number
                     elif format_[i][0] in ["f", "F", "e", "E", "g", "G", "a", "A"]:
@@ -1996,28 +1875,17 @@ class PrintfAST(AST):
                             format_[i] = arg
                             continue
                         # if the string is shorter than the size
-                        if isinstance(arg, str):
-                            if len(str(arg)) < self.width:
-                                # if the string is left-aligned
-                                if left_align:
-                                    # add spaces to the right of the string
-                                    arg = str(arg) + " " * (self.width - len(str(arg)))
-                                # if the string is right-aligned
-                                else:
-                                    # add spaces to the left of the string
-                                    arg = " " * (self.width - len(str(arg))) + str(arg)
+                        if isinstance(arg, str) and len(str(arg)) < self.width:
+                            # if the string is left-aligned
+                            if left_align:
+                                # add spaces to the right of the string
+                                arg = str(arg) + " " * (self.width - len(str(arg)))
+                            # if the string is right-aligned
+                            else:
+                                # add spaces to the left of the string
+                                arg = " " * (self.width - len(str(arg))) + str(arg)
                         format_[i] = arg
         return format_
-
-    @staticmethod
-    def getType(input):
-        if type(input) == int:
-            return 0
-        if type(input) == float:
-            return 1
-        if type(input) == str:
-            return 2
-        return 3
 
     def mips(self, registers: Registers):
         out_local = ""
@@ -2034,23 +1902,19 @@ class PrintfAST(AST):
                 continue
             if isinstance(i, Register):
                 continue
-            if i in registers.globalObjects.data[0].keys() or (
+            if i in registers.globalObjects.data[0] or (
                 (isinstance(i, str) and (len(i) == 0)) or isinstance(i, int)
             ):
                 continue
             # if match regex r"\\[0-9A-Fa-f]{2}", then skip
             if isinstance(i, str) and re.match(r"\\[0-9A-Fa-f]{2}", i):
                 continue
-            if (
-                isinstance(i, float) and i not in registers.globalObjects.data[1].keys()
-            ):
+            if isinstance(i, float) and i not in registers.globalObjects.data[1]:
                 # cast the float to be representable in mips
-                # i = array('f', [i])[0]
-                if i in registers.globalObjects.data[1].keys():
-                    continue
-                registers.globalObjects.data[1][i] = (
-                    f"flt_{len(registers.globalObjects.data[1].items())}"
-                )
+                if i not in registers.globalObjects.data[1]:
+                    registers.globalObjects.data[1][i] = (
+                        f"flt_{len(registers.globalObjects.data[1].items())}"
+                    )
             elif isinstance(i, str):
                 registers.globalObjects.data[0][i] = (
                     f"str_{len(registers.globalObjects.data[0].items())}"
@@ -2130,14 +1994,14 @@ class PrintfAST(AST):
                         out_local += "\tli $v0, 11\n"
 
                 out_local += "\tsyscall\n"
-            elif self.getType(list_format[i]) == 0:  # if the type is an integer
+            elif isinstance(list_format[i], int):  # if the type is an integer
                 out_local += f"\tli $a0, {list_format[i]}\n"
                 out_local += "\tli $v0, 1\n"
                 out_local += "\tsyscall\n"
                 if "a0" not in out_list:
                     out_list.append("a0")
             # temp fix for floats
-            elif self.getType(list_format[i]) == 1:  # if the type is a float
+            elif isinstance(list_format[i], float):  # if the type is a float
                 registers.floatManager.LRU(self.root)
                 self.register = self.root.register
                 out_local += f"\tlwc1 ${self.register.name}, {registers.globalObjects.data[1][list_format[i]]}\n"
@@ -2146,7 +2010,7 @@ class PrintfAST(AST):
                 out_local += "\tsyscall\n"
                 if "f12" not in out_list:
                     out_list.append("f12")
-            elif self.getType(list_format[i]) == 2:  # if the type is a string/char
+            elif isinstance(list_format[i], str):  # if the type is a string/char
                 out_local += (
                     f"\tla $a0, {registers.globalObjects.data[0][list_format[i]]}\n"
                 )
@@ -2154,7 +2018,7 @@ class PrintfAST(AST):
                 out_local += "\tsyscall\n"
                 if "a0" not in out_list:
                     out_list.append("a0")
-            elif self.getType(list_format[i]) == 3:  # if the type is a variable
+            else:  # if the type is a variable
                 var = list_format[i]
                 out_local += "\tlw $a0, "
                 if var.type == "int":
@@ -2173,47 +2037,21 @@ class PrintfAST(AST):
                     )
                     out_local += "\tli $v0, 4\n"
                 out_local += "\tsyscall\n"
-        # out_list = [registers.argumentManager.head.name]
-        # self.register = registers.argumentManager.head
-        # self.register.object = self.root
-        # if self.root.register is not None:
-        #     out_list.append(self.root.register.name)
         return out_local, out_global, out_list
 
 
 class DeclrAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
         in_const: bool = False,
-        var_type: str = None,
+        var_type: str | None = None,
     ):
-        """
-                ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣤⣤⣤⣤⣤⣶⣦⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⡿⠛⠉⠙⠛⠛⠛⠛⠻⢿⣿⣷⣤⡀⠀⠀⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⠋⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠈⢻⣿⣿⡄⠀⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⣸⣿⡏⠀⠀⠀⣠⣶⣾⣿⣿⣿⠿⠿⠿⢿⣿⣿⣿⣄⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⣿⣿⠁⠀⠀⢰⣿⣿⣯⠁⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣷⡄⠀
-        ⠀⠀⣀⣤⣴⣶⣶⣿⡟⠀⠀⠀⢸⣿⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣷⠀
-        ⠀⢰⣿⡟⠋⠉⣹⣿⡇⠀⠀⠀⠘⣿⣿⣿⣿⣷⣦⣤⣤⣤⣶⣶⣶⣶⣿⣿⣿⠀
-        ⠀⢸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠹⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠃⠀
-        ⠀⣸⣿⡇⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠉⠻⠿⣿⣿⣿⣿⡿⠿⠿⠛⢻⣿⡇⠀⠀
-        ⠀⣿⣿⠁⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣧⠀⠀
-        ⠀⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀
-        ⠀⣿⣿⠀⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿⠀⠀
-        ⠀⢿⣿⡆⠀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⡇⠀⠀
-        ⠀⠸⣿⣧⡀⠀⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠃⠀⠀
-        ⠀⠀⠛⢿⣿⣿⣿⣿⣇⠀⠀⠀⠀⠀⣰⣿⣿⣷⣶⣶⣶⣶⠶⠀⢠⣿⣿⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⣽⣿⡏⠁⠀⠀⢸⣿⡇⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⣿⣿⡇⠀⢹⣿⡆⠀⠀⠀⣸⣿⠇⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⢿⣿⣦⣄⣀⣠⣴⣿⣿⠁⠀⠈⠻⣿⣿⣿⣿⡿⠏⠀⠀⠀⠀
-        ⠀⠀⠀⠀⠀⠀⠀⠈⠛⠻⠿⠿⠿⠿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-        """
         super().__init__(root, children, parent)
         self.const = in_const
-        self.type = var_type
+        self.type = var_type if var_type else ""
 
     def handle(self):
         return self
@@ -2221,7 +2059,7 @@ class DeclrAST(AST):
     def __repr__(self) -> str:
         return f"{super().__repr__()} {'const' if self.const else ''} {self.type} "
 
-    def getDict(self):
+    def to_dict(self):
         return {
             self.root.key: [f"{'const ' if self.const else ''}{self.type}"]
         }, self.root.key
@@ -2231,11 +2069,13 @@ class DeclrAST(AST):
 
 
 class VarDeclrAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
-        if self.root.key == "assign":
+        if self.root and self.root.key == "assign":
             if not isinstance(self.children[0], VarNode):
                 raise AttributeError("'Attempting to assign to a non-variable type'")
             # assign value
@@ -2256,7 +2096,7 @@ class VarDeclrAST(AST):
             child = self.children[1].value
             while isinstance(child, VarNode):
                 child = child.value
-            self.children[0].type = getType(child)
+            self.children[0].type = get_type(child)
             # if isinstance(self.children[0], VarNode) and isinstance(self.children[1], VarNode):
             #     if self.children[0].total_deref != self.children[1].total_deref + 1:
             #         raise AttributeError(f"Incompatible types for {self.children[0].key} and {self.children[1].key}.")
@@ -2268,7 +2108,9 @@ class VarDeclrAST(AST):
 
 
 class AssignAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -2312,7 +2154,9 @@ class AssignAST(AST):
 
 
 class TermAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -2329,11 +2173,11 @@ class TermAST(AST):
                 return self
         if self.root.value == "*":
             node = self.children[0] * self.children[1]
-            node_type = checkType(str(node.value))
+            node_type = check_type(str(node.value))
             node.key = node_type
         elif self.root.value == "%":
             node = self.children[0] % self.children[1]
-            node_type = checkType(str(node.value))
+            node_type = check_type(str(node.value))
             node.key = node_type
         elif self.root.value == "/":
             node = self.children[0] / self.children[1]
@@ -2344,11 +2188,13 @@ class TermAST(AST):
                 raise RuntimeError(
                     "'Expected one variable for increment operation, got multiple'"
                 )
-            if not isinstance(self.children[0], VarNode):
-                if not self.children[0].parent.array:
-                    raise AttributeError(
-                        "'Attempting to decrement a non-variable type object'"
-                    )
+            if (
+                not isinstance(self.children[0], VarNode)
+                and not self.children[0].parent.array
+            ):
+                raise AttributeError(
+                    "'Attempting to decrement a non-variable type object'"
+                )
             node = self.children[0]
             if isinstance(node, VarNode):
                 if node.const:
@@ -2366,11 +2212,13 @@ class TermAST(AST):
                 raise RuntimeError(
                     "'Expected one variable for increment operation, got multiple'"
                 )
-            if not isinstance(self.children[0], VarNode):
-                if not self.children[0].parent.array:
-                    raise AttributeError(
-                        "'Attempting to decrement a non-variable type object'"
-                    )
+            if (
+                not isinstance(self.children[0], VarNode)
+                and not self.children[0].parent.array
+            ):
+                raise AttributeError(
+                    "'Attempting to decrement a non-variable type object'"
+                )
             node = self.children[0]
             if isinstance(node, VarNode):
                 if node.const:
@@ -2398,14 +2246,14 @@ class TermAST(AST):
             node = self.children[0] > self.children[1]
             node.value = int(node.value)
         elif self.root.value == "==":
-            if type(self.children[0]) != type(self.children[1]):
+            if not isinstance(self.children[0], type(self.children[1])):
                 node.value = self.children[0].value == self.children[1].value
             else:
                 node.value = self.children[0] == self.children[1]
             node.value = int(node.value)
             node.key = "int"
         elif self.root.value == "!=":
-            if type(self.children[0]) != type(self.children[1]):
+            if not isinstance(self.children[0], type(self.children[1])):
                 node.value = self.children[0].value != self.children[1].value
             else:
                 node.value = self.children[0] != self.children[1]
@@ -2439,13 +2287,15 @@ class TermAST(AST):
         out = ""
         out_global = ""
         out_list = []
-        out, out_global, out_list = self.visitMIPSOp(self, registers)
+        out, out_global, out_list = self.visit_mips_op(self, registers)
 
         return out, out_global, out_list
 
 
 class FactorAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -2472,11 +2322,13 @@ class FactorAST(AST):
                 raise RuntimeError(
                     "'Expected one variable for increment operation, got multiple'"
                 )
-            if not isinstance(self.children[0], VarNode):
-                if not self.children[0].parent.array:
-                    raise AttributeError(
-                        "'Attempting to decrement a non-variable type object'"
-                    )
+            if (
+                not isinstance(self.children[0], VarNode)
+                and not self.children[0].parent.array
+            ):
+                raise AttributeError(
+                    "'Attempting to decrement a non-variable type object'"
+                )
             node = self.children[0]
             if isinstance(node, VarNode):
                 if node.const:
@@ -2495,11 +2347,13 @@ class FactorAST(AST):
                 raise RuntimeError(
                     "'Expected one variable for increment operation, got multiple'"
                 )
-            if not isinstance(self.children[0], VarNode):
-                if not self.children[0].parent.array:
-                    raise AttributeError(
-                        "'Attempting to decrement a non-variable type object'"
-                    )
+            if (
+                not isinstance(self.children[0], VarNode)
+                and not self.children[0].parent.array
+            ):
+                raise AttributeError(
+                    "'Attempting to decrement a non-variable type object'"
+                )
             node = self.children[0]
             if isinstance(node, VarNode):
                 if node.const:
@@ -2513,10 +2367,13 @@ class FactorAST(AST):
                     )
             node.value -= 1
             return node
+        return None
 
 
 class PrimaryAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -2534,7 +2391,9 @@ class PrimaryAST(AST):
 
 
 class DerefAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -2553,9 +2412,7 @@ class DerefAST(AST):
             match.parent = self.parent
             return match
         if not isinstance(child, VarNode):
-            raise ReferenceError(
-                "Attempting to dereference a non-variable type object"
-            )
+            raise ReferenceError("Attempting to dereference a non-variable type object")
         if not child.ptr:
             raise AttributeError(
                 "Attempting to dereference a non-pointer type variable"
@@ -2594,16 +2451,17 @@ class DerefAST(AST):
 
 
 class ArrayElementAST(AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
         self.array: ArrayNode | None = None
         self.type: str | None = None
 
     def handle(self):
         # update root value
-        if len(self.children) == 2:
-            if isinstance(self.children[1], Node):
-                self.root.value = self.children[1].value
+        if len(self.children) == 2 and isinstance(self.children[1], Node):
+            self.root.value = self.children[1].value
         # get nearest symbol table
         temp_symbol = self.symbolTable
         temp_parent = self.parent
@@ -2638,7 +2496,7 @@ class ArrayElementAST(AST):
         temp_symbol = matches[0]
         self.type = temp_symbol.type
         matches[0].used = True
-        if isinstance(self.root.value, str) or isinstance(self.root.value, Node):
+        if isinstance(self.root.value, str | Node):
             return self
         if not isinstance(self.root.value, int):
             raise AttributeError("Array index must be an integer")
@@ -2652,8 +2510,7 @@ class ArrayElementAST(AST):
 
     def save(self):
         # for printing purposes
-        out = f"{self.root.key}[{self.root.value}]"
-        return out
+        return f"{self.root.key}[{self.root.value}]"
 
     def mips(self, registers: Registers):
         out_local = out_global = ""
@@ -2694,15 +2551,15 @@ class ArrayElementAST(AST):
         return out_local, out_global, out_list
 
 
-class Scope_AST(AST):
+class ScopeAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
         condition: AST | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable=SymbolTable())
+        super().__init__(root, children, parent, symbol_table=SymbolTable())
         self.condition: AST | Node | None = condition
         self.symbolTable.owner = self
 
@@ -2710,13 +2567,13 @@ class Scope_AST(AST):
         return self
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
-        visited = visited_list_DFS(self)
+        visited = visited_list_dfs(self)
         out = ""
 
         for current in visited:
             output = tuple
             if current.root.value in tokens:
-                output = self.visitLLVMOp(current, index)
+                output = self.visit_llvm_op(current, index)
             else:
                 output = current.llvm(True, index)
             out += output[0]
@@ -2732,27 +2589,28 @@ class Scope_AST(AST):
             current = not_visited.pop()
             if current not in visited:
                 visited.append(current)
-                if not (
-                    isinstance(current, Scope_AST)
-                    or isinstance(current, FuncDefnAST)
-                    or isinstance(current, FuncCallAST)
-                    or isinstance(current, If_CondAST)
-                    or isinstance(current, While_loopAST)
-                    or isinstance(current, For_loopAST)
-                    or isinstance(current, FuncDeclAST)
-                    or isinstance(current, SwitchAST)
+                if isinstance(current, AST) and not (
+                    isinstance(
+                        current,
+                        ScopeAST
+                        | FuncDefnAST
+                        | FuncCallAST
+                        | IfCondAST
+                        | WhileLoopAST
+                        | ForLoopAST
+                        | FuncDeclAST
+                        | SwitchAST,
+                    )
                 ):
-                    if isinstance(current, AST):
-                        for i in current.children:
-                            if isinstance(i, ArrayDeclAST) and isinstance(
-                                current, InstrAST
-                            ):
-                                continue
-                            not_visited.append(i)
+                    for i in current.children:
+                        if isinstance(i, ArrayDeclAST) and isinstance(
+                            current, InstrAST
+                        ):
+                            continue
+                        not_visited.append(i)
         visited.reverse()
         out_local = out_global = ""
         out_list = []
-        size = 4
 
         output = None
         original_stacksize = registers.globalObjects.stackSize
@@ -2760,7 +2618,7 @@ class Scope_AST(AST):
             if isinstance(current, Node):
                 output = current.mips(registers)
             elif current.root.value in tokens:
-                output = self.visitMIPSOp(current, registers)
+                output = self.visit_mips_op(current, registers)
             else:
                 output = current.mips(registers)
             out_local += output[0]
@@ -2772,19 +2630,21 @@ class Scope_AST(AST):
         return out_local, out_global, out_list
 
 
-class If_CondAST(Scope_AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+class IfCondAST(ScopeAST):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
         self.exit: int = -1
 
     def handle(self):
         return self
 
-    def getDict(self):
+    def to_dict(self):
         return {"if": self.condition.save()}, "if"
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         else:
@@ -2798,20 +2658,20 @@ class If_CondAST(Scope_AST):
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         # condition first with branch
         out = ""
-        visited = visited_list_DFS(self.condition)
+        visited = visited_list_dfs(self.condition)
 
         for current in visited:
-            output_str, output_in = self.visitLLVMOp(current, index)
+            output_str, output_in = self.visit_llvm_op(current, index)
             out += output_str
             index = output_in
 
         # if block
-        visited = visited_list_DFS(self.children[0])
+        visited = visited_list_dfs(self.children[0])
 
         for current in visited:
             output = tuple
             if current.root.value in tokens:
-                output = self.visitLLVMOp(current, index)
+                output = self.visit_llvm_op(current, index)
             else:
                 output = current.llvm(True, index)
             out += output[0]
@@ -2820,7 +2680,7 @@ class If_CondAST(Scope_AST):
         # else block if else ast exist do 'else llvm' else do 'create block'
         else_bool = False
         for child in self.children:
-            if isinstance(child, Else_CondAST):
+            if isinstance(child, ElseCondAST):
                 output = child.llvm(True, index)
                 out += output[0]
                 index = output[1]
@@ -2835,8 +2695,6 @@ class If_CondAST(Scope_AST):
 
     def mips(self, registers: Registers):
         # condition first
-        visited = []
-        not_visited = [self.condition]
         # DFS
         temp_list = out_list = []
         out_global = out_cond = ""
@@ -2847,18 +2705,18 @@ class If_CondAST(Scope_AST):
         self.register = registers.globalObjects.index
         registers.globalObjects.index += 1
         return_bool = False
-        if len(self.children[0].children) > 0:
-            if isinstance(self.children[0].children[0], ReturnInstr):
-                return_bool = True
+        if len(self.children[0].children) > 0 and isinstance(
+            self.children[0].children[0], ReturnInstr
+        ):
+            return_bool = True
         # body of the if loop
         output = self.children[0].mips(registers)
         temp_out = output[0]
         temp_list += output[2]
         temp_list.append("v1")
-        count = 0
         # condition
         out_local += out_cond
-        if isinstance(self.children[-1], Else_CondAST):
+        if isinstance(self.children[-1], ElseCondAST):
             # branch if condition is false to else block
             out_local += f"\tbeq $v1, $zero, else_{registers.globalObjects.index}\n"
             out_else = f"else_{registers.globalObjects.index}: \n"
@@ -2875,7 +2733,6 @@ class If_CondAST(Scope_AST):
             out_global += output[1]
         else:
             pass
-            # out_else += f"\tjr $ra\n\n"
         registers.globalObjects.index += 1
         out_local += temp_out
         if self.exit == -1:
@@ -2890,15 +2747,17 @@ class If_CondAST(Scope_AST):
         return out_local, out_global, out_list
 
 
-class Else_CondAST(Scope_AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+class ElseCondAST(ScopeAST):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
-    def getDict(self):
+    def to_dict(self):
         return {"else": None}, "else"
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = [child.save() for child in self.children]
         return out
@@ -2907,12 +2766,12 @@ class Else_CondAST(Scope_AST):
         return self
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
-        visited = visited_list_DFS(self.children[0])
+        visited = visited_list_dfs(self.children[0])
         out = ""
         for current in visited:
             output = tuple
             if current.root.value in tokens:
-                output = self.visitLLVMOp(current, index)
+                output = self.visit_llvm_op(current, index)
             else:
                 output = current.llvm(True, index)
             out += output[0]
@@ -2920,12 +2779,13 @@ class Else_CondAST(Scope_AST):
         return out, index
 
     def mips(self, registers: Registers):
-        output = self.children[0].mips(registers)
-        return output
+        return self.children[0].mips(registers)
 
 
-class For_loopAST(Scope_AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+class ForLoopAST(ScopeAST):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
         self.initialization = None
         self.incr = None
@@ -2933,13 +2793,13 @@ class For_loopAST(Scope_AST):
     def handle(self):
         return self
 
-    def getDict(self):
+    def to_dict(self):
         return {
             "for": [self.initialization.save(), self.condition.save(), self.incr.save()]
         }, "for"
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         if self.condition is None:
@@ -2950,8 +2810,10 @@ class For_loopAST(Scope_AST):
         return out
 
 
-class While_loopAST(Scope_AST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+class WhileLoopAST(ScopeAST):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
         self.end_while: int = 0
         if len(self.children) > 0:
@@ -2961,11 +2823,11 @@ class While_loopAST(Scope_AST):
     def handle(self):
         return self
 
-    def getDict(self):
+    def to_dict(self):
         return {"while": [self.condition.save()]}, "while"
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         if self.condition is None:
@@ -2992,7 +2854,7 @@ class While_loopAST(Scope_AST):
 
         # handle everything separately
         for current in visited:
-            output = self.visitLLVMOp(current, index)
+            output = self.visit_llvm_op(current, index)
 
             out += output[0]
             index = output[1]
@@ -3006,13 +2868,13 @@ class While_loopAST(Scope_AST):
         out += f"{name}: ; preds = %{blocks['1']}\n"
 
         # DFS
-        visited = visited_list_DFS(self.children[0])
+        visited = visited_list_dfs(self.children[0])
 
         # Handle
         for current in visited:
             output = tuple
             if current.root.value in tokens:
-                output = self.visitLLVMOp(current, index)
+                output = self.visit_llvm_op(current, index)
             else:
                 output = current.llvm(True, index)
             out += output[0]
@@ -3066,7 +2928,9 @@ class While_loopAST(Scope_AST):
 
 
 class CondAST(TermAST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
         self.last_eval = None
 
@@ -3112,7 +2976,9 @@ class CondAST(TermAST):
 
 
 class InitAST(DeclrAST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
@@ -3120,11 +2986,13 @@ class InitAST(DeclrAST):
 
 
 class BreakAST(InstrAST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
-        blocks = self.searchBlocks()
+        blocks = self.search_blocks()
         name = blocks["3"]
         out = f"br label %{name}"
         return out, index
@@ -3133,18 +3001,18 @@ class BreakAST(InstrAST):
         parent = self.parent
         found_last = False
         while parent is not None:
-            if isinstance(parent, While_loopAST) or isinstance(parent, CaseAST):
+            if isinstance(parent, WhileLoopAST | CaseAST):
                 break
             parent = parent.parent
-        if isinstance(parent, While_loopAST):
+        if isinstance(parent, WhileLoopAST):
             end_while_register = parent.end_while
         elif isinstance(parent, CaseAST):
             end_switch_register = parent.parent.end_label
         else:
             # search for the last if/else in the switch
             for child in parent.parent.children:
-                if not isinstance(child, If_CondAST) and not isinstance(
-                    child, Else_CondAST
+                if not isinstance(child, IfCondAST) and not isinstance(
+                    child, ElseCondAST
                 ):
                     found_last = True
                     end_while_register = child.end_register
@@ -3152,16 +3020,18 @@ class BreakAST(InstrAST):
             if not found_last:
                 raise Exception("Break outside of a loop or switch")
 
-        out = f"\tj end_{'switch' if isinstance(parent, CaseAST) else 'while'}_{end_while_register if isinstance(parent, While_loopAST) else end_switch_register}\n"
+        out = f"\tj end_{'switch' if isinstance(parent, CaseAST) else 'while'}_{end_while_register if isinstance(parent, WhileLoopAST) else end_switch_register}\n"
         return out, "", []
 
 
 class ContAST(InstrAST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
-        blocks = self.searchBlocks()
+        blocks = self.search_blocks()
         name = blocks["1"]
         out = f"br label %{name}"
         return out, index
@@ -3171,7 +3041,7 @@ class ContAST(InstrAST):
         # search for the parent block that's a while
         parent = self.parent
         while True:
-            if isinstance(parent, While_loopAST):
+            if isinstance(parent, WhileLoopAST):
                 break
             parent = parent.parent
         while_register = parent.register
@@ -3182,13 +3052,13 @@ class ContAST(InstrAST):
 class FuncParametersAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
-        parameters: list[FuncParameter:None] = None,
+        symbol_table: SymbolTable | None = None,
+        parameters: list[FuncParameter | None] | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
         if parameters is None:
             parameters = []
         self.parameters = parameters
@@ -3203,11 +3073,11 @@ class FuncParametersAST(AST):
 class FuncDeclAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
-        return_type: str = None,
+        symbol_table: SymbolTable | None = None,
+        return_type: str | None = None,
         const: bool = False,
         ptr: bool = False,
         ptr_level: int = 0,
@@ -3217,7 +3087,7 @@ class FuncDeclAST(AST):
             root,
             children,
             parent,
-            symbolTable=SymbolTable() if symbolTable is None else symbolTable,
+            symbol_table=SymbolTable() if symbol_table is None else symbol_table,
         )
         self.symbolTable.owner = self
         self.type: str = return_type
@@ -3233,7 +3103,7 @@ class FuncDeclAST(AST):
         return self
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         for child in self.children:
@@ -3241,10 +3111,10 @@ class FuncDeclAST(AST):
                 out[name].append({"Parameters": child.save()})
         return out
 
-    def save_dot(self, dictionary_function: dict = None):
+    def save_dot(self, dictionary_function: dict | None = None):
         return f"{'const ' if self.const else ''}{self.type}{'*'*self.ptr_level} {self.root.key} [label=\"{self.root.key}\"]\n"
 
-    def getDict(self):
+    def to_dict(self):
         return (
             {
                 f"{'const ' if self.const else ''}{self.type}{'*' * self.ptr_level} {self.root.key}": self.root.value
@@ -3255,18 +3125,15 @@ class FuncDeclAST(AST):
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         out = ""
         # Begin
-        out += f"define dso_local {getLLVMType(self.type)} @{self.root.key}"
+        out += f"define dso_local {get_llvm_type(self.type)} @{self.root.key}"
         # Parameters
         paramaters = self.params
         param_string = ""
-        default_exist = False
         if len(paramaters) > 0:
-            count = 0
-            for i in paramaters:
-                param_string += f"{getLLVMType(i.type)} noundef %{i.key}"
-                if count + 1 != len(paramaters):
+            for i, param in enumerate(paramaters):
+                param_string += f"{get_llvm_type(param.type)} noundef %{param.key}"
+                if i + 1 != len(paramaters):
                     param_string += ", "
-                count += 1
         out += f" ({param_string})"
         return out, index
 
@@ -3277,11 +3144,11 @@ class FuncDeclAST(AST):
 class FuncDefnAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
-        return_type: str = None,
+        symbol_table: SymbolTable | None = None,
+        return_type: str | None = None,
         const: bool = False,
         ptr: bool = False,
         ptr_level: int = 0,
@@ -3291,7 +3158,7 @@ class FuncDefnAST(AST):
             root,
             children,
             parent,
-            symbolTable=SymbolTable() if symbolTable is None else symbolTable,
+            symbol_table=SymbolTable() if symbol_table is None else symbol_table,
         )
         self.symbolTable.owner = self
         self.type: str = return_type
@@ -3308,7 +3175,7 @@ class FuncDefnAST(AST):
         return self
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         for child in self.children:
@@ -3318,7 +3185,7 @@ class FuncDefnAST(AST):
                 out[name].append({"Body": child.save()})
         return out
 
-    def getDict(self):
+    def to_dict(self):
         return (
             {
                 f"{'const ' if self.const else ''}{self.type}{'*' * self.ptr_level} {self.root.key}": self.root.value
@@ -3329,18 +3196,15 @@ class FuncDefnAST(AST):
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         out = ""
         # Begin
-        out += f"\ndefine dso_local {getLLVMType(self.type)} @{self.root.key}"
+        out += f"\ndefine dso_local {get_llvm_type(self.type)} @{self.root.key}"
         # Parameters
         parameters = self.params
         param_string = ""
-        default_exist = False
         if len(parameters) > 0:
-            count = 0
-            for i in parameters:
-                param_string += f"{getLLVMType(i.type)} noundef %{i.key}"
-                if count + 1 != len(parameters):
+            for i, param in enumerate(parameters):
+                param_string += f"{get_llvm_type(param.type)} noundef %{param.key}"
+                if i + 1 != len(parameters):
                     param_string += ", "
-                count += 1
         out += f" ({param_string})"
         # the rest
         out += " #0 {\n"
@@ -3348,9 +3212,9 @@ class FuncDefnAST(AST):
         local_index = 1
         if len(parameters) > 0:
             for child in parameters:
-                out += f"%{local_index} = alloca {getLLVMType(child.type)}, align {'4' if not child.ptr else '8'}\n"
-                out += f"%store {getLLVMType(child.type)} %{child.key}, ptr %{local_index}, align {'4' if not child.ptr else '8'}\n"
-                entry, length = self.getEntry(child)
+                out += f"%{local_index} = alloca {get_llvm_type(child.type)}, align {'4' if not child.ptr else '8'}\n"
+                out += f"%store {get_llvm_type(child.type)} %{child.key}, ptr %{local_index}, align {'4' if not child.ptr else '8'}\n"
+                entry, length = self.get_entry(child)
                 entry.register = local_index
                 local_index += 1
         # Scope
@@ -3440,13 +3304,13 @@ class FuncDefnAST(AST):
 class FuncCallAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
-        args: list = None,
+        symbol_table: SymbolTable | None = None,
+        args: list | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
         if args is None:
             args = []
         self.args = args
@@ -3455,7 +3319,7 @@ class FuncCallAST(AST):
         return self
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         out[name].append({"parameters": [child.save() for child in self.children]})
@@ -3463,16 +3327,16 @@ class FuncCallAST(AST):
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         # %result = call i32 @add(i32 3, i32 4)
-        function, length = self.getEntry(self.root)
+        function, length = self.get_entry(self.root)
         # arguments
         arg_string = ""
         count = 0
         for arg in self.args:
-            arg_string += f"{getLLVMType(getType(arg.value) if isinstance(arg, Node) else arg.type)} {arg.value!s}"
+            arg_string += f"{get_llvm_type(get_type(arg.value) if isinstance(arg, Node) else arg.type)} {arg.value!s}"
             if count + 1 != len(arg):
                 arg_string += ", "
         # end string
-        out = f"call {getLLVMType(function.type)} @{self.root.key}({arg_string})\n"
+        out = f"call {get_llvm_type(function.type)} @{self.root.key}({arg_string})\n"
         return out, index
 
     def mips(self, registers: Registers):
@@ -3501,11 +3365,10 @@ class FuncCallAST(AST):
             if current.parent is None:
                 break
             current = current.parent
-        count = 0
         parameters_org = entry.parameters
         variables = []
         calc = ""
-        for arg in self.args:
+        for index, arg in enumerate(self.args):
             if arg.register is None:
                 if isinstance(arg, AST):
                     output = arg.mips(registers)
@@ -3523,29 +3386,27 @@ class FuncCallAST(AST):
                         # if not arg.ptr:
                         variables.append(arg)
 
-            par_type = parameters_org[count].type
+            par_type = parameters_org[index].type
             if par_type == "float":
                 par_type = "flt_"
             elif par_type == "int":
                 par_type = "int_"
             elif par_type == "char":
                 par_type = "chr_"
-            if parameters_org[count].ptr:
-                calc += f"\tsw{'c1' if parameters_org[count].type == 'float' else ''} ${arg.register.name}, {par_type}{parameters_org[count].name}\n"
+            if parameters_org[index].ptr:
+                calc += f"\tsw{'c1' if parameters_org[index].type == 'float' else ''} ${arg.register.name}, {par_type}{parameters_org[index].name}\n"
             else:
-                calc += f"\tsw{'c1' if parameters_org[count].type == 'float' else ''} ${arg.register.name}, {par_type}{parameters_org[count].name}\n"
+                calc += f"\tsw{'c1' if parameters_org[index].type == 'float' else ''} ${arg.register.name}, {par_type}{parameters_org[index].name}\n"
             # out += f"\tmov{'.s' if parameters_org[count].type == 'float' else 'e'} ${arg.register.name}, ${parameters_org[count].object.register.name}\n"
-            count += 1
         size = len(variables) * 4
         if size != 0:
             out += f"\taddi $sp, $sp, -{size}\n"
             registers.globalObjects.stackSize += size
-        count = 0
-        for vars in variables:
+        for index, vars in enumerate(variables):
             output = vars.mips(registers)
             out += output[0]
             temp_list += output[2]
-            if parameters_org[count].ptr or parameters_org[count].reference:
+            if parameters_org[index].ptr or parameters_org[index].reference:
                 continue
             # retrieve value globaly and store it locally
             if registers.search(vars) is None:
@@ -3561,14 +3422,12 @@ class FuncCallAST(AST):
             elif vars.type == "char":
                 type_string = "chr"
             out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {type_string}_{vars.value if not isinstance(vars, VarNode) else vars.key}\n"
-            out += f"\tsw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {count * 4}($sp)\n"
+            out += f"\tsw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {index * 4}($sp)\n"
             vars.register.shuffle()
-            count += 1
         out += calc
         out += f"\tjal {self.root.key}\n"
-        count = 0
-        for vars in variables:
-            if parameters_org[count].ptr or parameters_org[count].reference:
+        for index, vars in enumerate(variables):
+            if parameters_org[index].ptr or parameters_org[index].reference:
                 out_type = ""
                 if vars.type == "float":
                     out_type = "flt"
@@ -3577,14 +3436,14 @@ class FuncCallAST(AST):
                 elif vars.type == "char":
                     out_type = "chr"
                 if vars.ptr:
-                    out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.value.register.name}, {out_type}_{parameters_org[count].name}\n"
+                    out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.value.register.name}, {out_type}_{parameters_org[index].name}\n"
                     out += f"\tla{'c1' if vars.type == 'float' else ''} ${vars.register.name}, 0(${vars.value.register.name})\n"
                     out += f"\tsw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {out_type}_{vars.value.key}\n"
                 else:
-                    out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {out_type}_{parameters_org[count].name}\n"
+                    out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {out_type}_{parameters_org[index].name}\n"
                     out += f"\tsw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {out_type}_{vars.key}\n"
                 continue
-            out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {count * 4}($sp)\n"
+            out += f"\tlw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {index * 4}($sp)\n"
             vars.register.shuffle()
             type_string = ""
             if vars.type == "float":
@@ -3594,7 +3453,7 @@ class FuncCallAST(AST):
             elif vars.type == "char":
                 type_string = "chr"
             out += f"\tsw{'c1' if vars.type == 'float' else ''} ${vars.register.name}, {type_string}_{vars.value if not isinstance(vars, VarNode) else vars.key}\n"
-            count += 1
+
         if size != 0:
             out += f"\taddi $sp, $sp, {size}\n"
             registers.globalObjects.stackSize -= size
@@ -3612,10 +3471,10 @@ class FuncCallAST(AST):
 class FuncScopeAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
     ):
         super().__init__(root, children, parent, SymbolTable())
         self.symbolTable.owner = self.root.key
@@ -3634,14 +3493,15 @@ class FuncScopeAST(AST):
                 if current is not self:
                     visited.append(current)
                 if not (
-                    isinstance(current, While_loopAST)
-                    or isinstance(current, FuncDeclAST)
-                    or isinstance(current, If_CondAST)
-                    or (
-                        isinstance(current, FuncDefnAST)
-                        and isinstance(current, FuncScopeAST)
+                    isinstance(
+                        current,
+                        WhileLoopAST
+                        | FuncDeclAST
+                        | IfCondAST
+                        | ArrayElementAST
+                        | FuncDefnAST,
                     )
-                    or isinstance(current, ArrayElementAST)
+                    or (isinstance(current, FuncScopeAST) and current.children)
                 ):
                     for i in current.children:
                         if not isinstance(i, Node):
@@ -3654,18 +3514,20 @@ class FuncScopeAST(AST):
                 has_return = True
             output = tuple
             if current.root.value in tokens:
-                output = self.visitLLVMOp(current, index)
+                output = self.visit_llvm_op(current, index)
             else:
                 output = current.llvm(True, index)
             out += output[0]
             index = output[1]
         if not has_return:
-            ret_type = getLLVMType(self.parent.type)
+            ret_type = get_llvm_type(self.parent.type)
             out += f"ret {ret_type if self.parent.type != 'void' else ''} {0 if self.parent.type != 'void' else '' } \n"
         out += "}\n"
         return out, index
 
-    def calculateStackSize(self):
+    def stack_size(self):
+        if not self.symbolTable or not self.parent or not self.parent.symbolTable:
+            return 0
         size = 0
         # calculate stack size of the function
         for entry in self.symbolTable.table:
@@ -3706,26 +3568,29 @@ class FuncScopeAST(AST):
                 if current is not self:
                     visited.append(current)
                 if not (
-                    isinstance(current, While_loopAST)
-                    or isinstance(current, FuncDeclAST)
-                    or isinstance(current, If_CondAST)
-                    or isinstance(current, FuncDefnAST)
-                    or isinstance(current, SwitchAST)
+                    isinstance(
+                        current,
+                        WhileLoopAST
+                        | FuncDeclAST
+                        | IfCondAST
+                        | FuncDefnAST
+                        | SwitchAST,
+                    )
                 ):
                     if isinstance(current, Node):
                         continue
-                    for i in current.children:
+                    for entry in current.children:
                         if isinstance(current, InstrAST) and isinstance(
-                            i, ArrayDeclAST
+                            entry, ArrayDeclAST
                         ):
                             continue
                         if not (
-                            isinstance(i, Node) and not isinstance(i.parent, ArrayNode)
+                            isinstance(entry, Node)
+                            and not isinstance(entry.parent, ArrayNode)
                         ):
-                            not_visited.append(i)
+                            not_visited.append(entry)
         visited.reverse()
         temp_list = []
-        keys_list = []
         out_temp_global = ""
         out_temp_local = ""
         # registers for each entry in the symbol table
@@ -3844,7 +3709,7 @@ class FuncScopeAST(AST):
             if isinstance(current, Node):
                 output = current.mips(registers)
             elif current.root.value in tokens:
-                output = self.visitMIPSOp(current, registers)
+                output = self.visit_mips_op(current, registers)
             else:
                 output = current.mips(registers)
             out_temp_local += output[0]
@@ -3867,10 +3732,9 @@ class FuncScopeAST(AST):
         # save the registers
         out_local += f"\taddi $sp, $sp, -{size}\n"
         registers.globalObjects.stackSize += size
-        original_stack_size = registers.globalObjects.stackSize
-        count = 0
-        for i in temp_list:
-            reg_object = registers.searchRegister(i).object
+
+        for index, entry in enumerate(temp_list):
+            reg_object = registers.searchRegister(entry).object
             if reg_object is not None:
                 if isinstance(reg_object, AST):
                     reg_object = f" {reg_object.root.get_str()}"
@@ -3878,11 +3742,10 @@ class FuncScopeAST(AST):
                     reg_object = f" {reg_object.get_str()}"
                 else:
                     reg_object = None
-            if i.startswith("f"):
-                out_local += f"\tswc1 ${i}, {count * 4}($sp)\n"
+            if entry.startswith("f"):
+                out_local += f"\tswc1 ${entry}, {index * 4}($sp)\n"
             else:
-                out_local += f"\tsw ${i}, {count * 4}($sp)\t{'#' + reg_object if reg_object is not None else ''}\n"
-            count += 1
+                out_local += f"\tsw ${entry}, {index * 4}($sp)\t{'#' + reg_object if reg_object is not None else ''}\n"
 
         out_local += param_str
         out_local += out_temp_local
@@ -3900,13 +3763,12 @@ class FuncScopeAST(AST):
                 out_local += f"\tsw{'' if parm.type != 'float' else 'c1'} ${parm.register.name}, {type_str}_{parm.key}\n"
         # restore registers
         out_local += f"exit_{self.parent.index}:\n"
-        count = 0
-        for i in temp_list:
-            if i.startswith("f"):
-                out_local += f"\tlwc1 ${i}, {count * 4}($sp)\n"
+        for index, entry in enumerate(temp_list):
+            if entry.startswith("f"):
+                out_local += f"\tlwc1 ${entry}, {index * 4}($sp)\n"
             else:
-                out_local += f"\tlw ${i}, {count * 4}($sp)\n"
-            count += 1
+                out_local += f"\tlw ${entry}, {index * 4}($sp)\n"
+
         out_local += f"\taddi $sp, $sp, {size}\n"
         registers.globalObjects.stackSize -= size
         # End
@@ -3919,7 +3781,9 @@ class FuncScopeAST(AST):
 
 
 class ReturnInstr(InstrAST):
-    def __init__(self, root: Node = None, children: list = None, parent=None):
+    def __init__(
+        self, root: Node | None = None, children: list | None = None, parent=None
+    ):
         super().__init__(root, children, parent)
 
     def handle(self):
@@ -3930,13 +3794,13 @@ class ReturnInstr(InstrAST):
         temp_type = ""
         child = self.children[0]
         if isinstance(child, Node):
-            temp_type = getLLVMType(child.key)
+            temp_type = get_llvm_type(child.key)
             if temp_type == "float":
                 temp_type = "double"
             out += f"ret {temp_type if child.key is not None else 'i32'} {child.value if child.value is not Node else 0}\n"
         elif isinstance(child, VarNode):
-            temp_type = getLLVMType(child.key)
-            entry, length = self.getEntry(child)
+            temp_type = get_llvm_type(child.key)
+            entry, length = self.get_entry(child)
             out += f"%{index} = load {temp_type}, {temp_type} %{entry.register}, align {'4' if not child.ptr else '8'}\n"
             out += f"ret {temp_type} %{entry.register}\n"
         return out, index
@@ -3998,12 +3862,12 @@ class ReturnInstr(InstrAST):
 class ScanfAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
         self.variables = []
         self.format_string = None
         self.format_specifiers = []
@@ -4011,14 +3875,14 @@ class ScanfAST(AST):
         self.index: int = 0
 
     def save(self):
-        out, name = self.getDict()
+        out, name = self.to_dict()
         if out[name] is None:
             out[name] = []
         if self.root.value is None:
             out[name] = [child.save() for child in self.variables]
         return out
 
-    def getDict(self):
+    def to_dict(self):
         name = f"scanf({self.format_string})"
         return {name: self.variables}, name
 
@@ -4028,7 +3892,7 @@ class ScanfAST(AST):
     def llvm_global(self, index: int = 1) -> tuple[str, int]:
         out = ""
         out += f'@.str.{index} = private unnamed_addr constant [{len(self.format_string)} x i8] c"{self.format_string}\\00", align 1\n'
-        entry, length = self.getEntry(self.root)
+        entry, length = self.get_entry(self.root)
         entry.register = index
         index += 1
         return out, index
@@ -4039,19 +3903,20 @@ class ScanfAST(AST):
         count = 0
         for var in self.variables:
             if isinstance(var, Node):
-                var_string += f"{getLLVMType(getType(var.value))} noundef %{var.value}"
+                var_string += (
+                    f"{get_llvm_type(get_type(var.value))} noundef %{var.value}"
+                )
             else:
-                entry, length = self.getEntry(var)
-                var += f"{getLLVMType(entry.type)} noundef %{entry.register}"
+                entry, length = self.get_entry(var)
+                var += f"{get_llvm_type(entry.type)} noundef %{entry.register}"
             if count + 1 != len(self.variables):
                 var_string += ", "
         out += f"call i32 (ptr, ...) @__isoc99_scanf(ptr noundef @.str.{index}, {var_string})\n"
         return out, index
 
     def format(self):
-        format_ = re.split(r"(%[0-9]*[discf])|(\\\\0A)", self.format_string)
-        format_ = [x for x in format_ if x is not None and x != ""]
-        return format_
+        format_ = re.split(r"(%[0-9]*[discf])|(\\\\0A)", str(self.format_string))
+        return [x for x in format_ if x is not None and x != ""]
 
     def mips(self, registers: Registers):
         # Scanf in mips
@@ -4087,48 +3952,48 @@ class ScanfAST(AST):
         #     if format_[i][0] == '%':
         #         if format_[i][-1] == "d":
         out_list = []
-        counter = 0
-        for i in format_:
-            if i.startswith("%"):
-                if i.endswith("d"):
+        for index, format_str in enumerate(format_):
+            if format_str.startswith("%"):
+                if format_str.endswith("d"):
                     out_local += "\tli $v0, 5\n"
-                elif i.endswith("f"):
+                elif format_str.endswith("f"):
                     out_local += "\tli $v0, 6\n"
-                elif i.endswith("c"):
+                elif format_str.endswith("c"):
                     out_local += "\tli $v0, 12\n"
-                elif i.endswith("s"):
+                elif format_str.endswith("s"):
                     type_ = ""
-                    if self.variables[counter].type == "int":
+                    if self.variables[index].type == "int":
                         type_ = "int"
-                    elif self.variables[counter].type == "float":
+                    elif self.variables[index].type == "float":
                         type_ = "flt"
-                    elif self.variables[counter].type == "char":
+                    elif self.variables[index].type == "char":
                         type_ = "chr"
-                    out_local += f"\tla $a0, {type_}_{self.variables[counter].key}\n"
+                    out_local += f"\tla $a0, {type_}_{self.variables[index].key}\n"
                     format_string = ""
-                    if i[1:-1].isdigit():
-                        out_local += f"\tli $a1, {int(i[1:-1]) + 1}\n"
-                    if i not in registers.globalObjects.data[0].keys():
-                        registers.globalObjects.data[0][i] = f"format_{i[1:]}"
-                        format_string = f"format_{i[1:]}"
+                    if format_str[1:-1].isdigit():
+                        out_local += f"\tli $a1, {int(format_str[1:-1]) + 1}\n"
+                    if format_str not in registers.globalObjects.data[0]:
+                        registers.globalObjects.data[0][format_str] = (
+                            f"format_{format_str[1:]}"
+                        )
+                        format_string = f"format_{format_str[1:]}"
                     else:
-                        format_string = registers.globalObjects.data[0][i]
+                        format_string = registers.globalObjects.data[0][format_str]
                     out_local += f"\tla $a2, {format_string}\n"
                     out_local += "\tli $v0, 8\n"
-                elif i.endswith("i"):
+                elif format_str.endswith("i"):
                     out_local += "\tli $v0, 5\n"
                 else:
                     out_local += "\tli $v0, 5\n"
                 out_local += "\tsyscall\n"
                 out_list.append("v0")
-                variable_register = self.variables[counter].register.name
-                if i.endswith("s"):
+                variable_register = self.variables[index].register.name
+                if format_str.endswith("s"):
                     pass
                 else:
                     out_local += f"\tmov{'.s' if variable_register[0] == 'f' else 'e'} ${variable_register}, $v0\n"
-                    out_local += f"\tsw{'c1' if self.variables[counter].type == 'float' else ''} $v0, {self.variables[counter].type}_{self.variables[counter].key}\n"
+                    out_local += f"\tsw{'c1' if self.variables[index].type == 'float' else ''} $v0, {self.variables[index].type}_{self.variables[index].key}\n"
                     out_list.append(variable_register)
-                counter += 1
         out_list = list(dict.fromkeys(out_list))
         return out_local, "", out_list
 
@@ -4136,16 +4001,16 @@ class ScanfAST(AST):
 class ArrayDeclAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
         size: int = 0,
         ptr_size: int = 0,
-        arr_type: str = None,
+        arr_type: str | None = None,
         values=None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
         if values is None:
             values = []
         self.size = size
@@ -4166,32 +4031,32 @@ class ArrayDeclAST(AST):
 
     def llvm_global(self, index: int = 1) -> tuple[str, int]:
         out = ""
-        entry, length = self.getEntry(self.root)
+        entry, length = self.get_entry(self.root)
         out += (
             f"@__const.{entry.symbol_table.owner}.{entry.name} = private unnamed_addr constant "
-            f"[{self.size if self.size > 1 else 1} x {getLLVMType(getType(self.root.value))}] ["
+            f"[{self.size if self.size > 1 else 1} x {get_llvm_type(get_type(self.root.value))}] ["
         )
         count = 0
         vals = ""
         for val in self.values:
             vals += (
-                f"{getLLVMType(entry.type)} {val.value} "
+                f"{get_llvm_type(entry.type)} {val.value} "
                 f"{', ' if count + 1 != len(self.values) else ''}"
             )
             count += 1
         if count < self.size != 0:
-            for i in range(self.size - count):
-                vals += f"{getLLVMType(entry.type)} 0 {', ' if count + 1 != len(self.values) else ''}"
+            for _i in range(self.size - count):
+                vals += f"{get_llvm_type(entry.type)} 0 {', ' if count + 1 != len(self.values) else ''}"
         out += vals
         out += f"], align {4 if self.size < 4 else 16}\n"
         return out, index
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         out = ""
-        entry, length = self.getEntry(self.root)
+        entry, length = self.get_entry(self.root)
         if scope:
             # local
-            out += f"%{index} = alloca [ {self.size} x {getLLVMType(entry.type)}], align {4 if self.size < 4 else 16}\n"
+            out += f"%{index} = alloca [ {self.size} x {get_llvm_type(entry.type)}], align {4 if self.size < 4 else 16}\n"
             entry.register = index
             out += (
                 f"call void @llvm.memcpy.p0.p0.i64(ptr allign {4 if self.size < 4 else 16} %{index}, "
@@ -4206,65 +4071,70 @@ class ArrayDeclAST(AST):
             vals = "["
             count = 0
             for val in self.values:
-                vals += f"{getLLVMType(getType(entry.type))} {val.value} {', ' if count + 1 != len(self.values) else ''}"
+                vals += f"{get_llvm_type(get_type(entry.type))} {val.value} {', ' if count + 1 != len(self.values) else ''}"
                 count += 1
             if count < self.size != 0:
-                for i in range(self.size - count):
-                    vals += f"{getLLVMType(getType(entry.type))} 0 {', ' if count + 1 != len(self.values) else ''}"
+                for _i in range(self.size - count):
+                    vals += f"{get_llvm_type(get_type(entry.type))} 0 {', ' if count + 1 != len(self.values) else ''}"
             vals += "]"
             out += (
                 f"@{self.root.key} = dso_local global [ "
-                f"{self.size if self.size > 1 else 1} x {getLLVMType(getType(entry.type))}] "
+                f"{self.size if self.size > 1 else 1} x {get_llvm_type(get_type(entry.type))}] "
                 f"{'zeroinitializer' if len(self.values) == 0 else vals}, align {4 if self.size < 4 else 16}\n"
             )
         return out, index
 
     def mips(self, registers: Registers):
-        glb = self.globalCheck()
+        glb = self.global_check()
         out_local = ""
         out_global = ""
         out_list = []
-        val_index = 0
         if glb:
             # make use of data segment to make global variables
             # if values are defined in the array
             # check type first
-            if self.type == "int":
-                if self.root.key not in registers.globalObjects.data[2].values():
-                    temp_string = ""
-                    for i in range(len(self.values)):
-                        temp_string += f"{self.values[i].value}"
-                        if i != len(self.values) - 1:
-                            temp_string += ", "
-                    if len(self.values) < self.size:
-                        temp_string += ", 0" * (self.size - len(self.values))
-                    registers.globalObjects.data[2][temp_string] = (
-                        f"{self.type}_{self.root.key[:-2]}"  # remove the [] from the key
-                    )
-            elif self.type == "float":
-                if self.root.key not in registers.globalObjects.data[1].values():
-                    temp_string = ""
-                    for i in self.values:
-                        temp_string += f"{i.value}"
-                        if i != self.values[-1]:
-                            temp_string += ", "
-                    if len(self.values) < self.size:
-                        temp_string += ", 0.0" * (self.size - len(self.values))
-                    registers.globalObjects.data[1][temp_string] = (
-                        f"{self.type}_{self.root.key[:-2]}"
-                    )
-            elif self.type == "char":
-                if self.root.key not in registers.globalObjects.data[4].values():
-                    temp_string = ""
-                    for i in self.values:
-                        temp_string += f"'{i.value}'"
-                        if i != self.values[-1]:
-                            temp_string += ", "
-                    registers.globalObjects.data[4][temp_string] = (
-                        f"{self.type}_{self.root.key[:-2]}"
-                    )
-                    if len(self.values) < self.size:
-                        temp_string += ", 0" * (self.size - len(self.values))
+            if (
+                self.type == "int"
+                and self.root.key not in registers.globalObjects.data[2].values()
+            ):
+                temp_string = ""
+                for i in range(len(self.values)):
+                    temp_string += f"{self.values[i].value}"
+                    if i != len(self.values) - 1:
+                        temp_string += ", "
+                if len(self.values) < self.size:
+                    temp_string += ", 0" * (self.size - len(self.values))
+                registers.globalObjects.data[2][temp_string] = (
+                    f"{self.type}_{self.root.key[:-2]}"  # remove the [] from the key
+                )
+            elif (
+                self.type == "float"
+                and self.root.key not in registers.globalObjects.data[1].values()
+            ):
+                temp_string = ""
+                for i in self.values:
+                    temp_string += f"{i.value}"
+                    if i != self.values[-1]:
+                        temp_string += ", "
+                if len(self.values) < self.size:
+                    temp_string += ", 0.0" * (self.size - len(self.values))
+                registers.globalObjects.data[1][temp_string] = (
+                    f"{self.type}_{self.root.key[:-2]}"
+                )
+            elif (
+                self.type == "char"
+                and self.root.key not in registers.globalObjects.data[4].values()
+            ):
+                temp_string = ""
+                for i in self.values:
+                    temp_string += f"'{i.value}'"
+                    if i != self.values[-1]:
+                        temp_string += ", "
+                registers.globalObjects.data[4][temp_string] = (
+                    f"{self.type}_{self.root.key[:-2]}"
+                )
+                if len(self.values) < self.size:
+                    temp_string += ", 0" * (self.size - len(self.values))
         else:
             # make use of stack to make local variables
             # allocate memory for the array
@@ -4319,14 +4189,14 @@ class ArrayDeclAST(AST):
 class IncludeAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
 
-    def getDict(self):
+    def to_dict(self):
         return {
             f"#include<{self.root.key}>": self.root.value
         }, f"#include<{self.root.key}>"
@@ -4352,12 +4222,12 @@ class IncludeAST(AST):
 class SwitchAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
         self.cases = []
         self.has_default = False
         self.default = None
@@ -4381,7 +4251,6 @@ class SwitchAST(AST):
             compare_register = self.condition.register.name
         cases_list = []
         cases_cond_list = []
-        count = 0
         self.end_label = registers.globalObjects.index
         registers.globalObjects.index += 1
         for case in self.cases:
@@ -4395,7 +4264,6 @@ class SwitchAST(AST):
                 registers.floatManager.shuffle_name(compare_register)
             cases_cond_list.append((temp_local, temp_global, temp_list))
             cases_list.append(case.mips(registers))
-            count += 1
         if self.has_default:
             self.default.index = registers.globalObjects.index
             registers.globalObjects.index += 1
@@ -4420,22 +4288,22 @@ class SwitchAST(AST):
         return out_local, out_global, out_list
 
 
-class SwitchScopeAST(Scope_AST):
+class SwitchScopeAST(ScopeAST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
         condition: AST | None = None,
     ):
         super().__init__(root, children, parent, condition)
 
 
-class CaseAST(Scope_AST):
+class CaseAST(ScopeAST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
         condition: AST | None = None,
     ):
@@ -4461,8 +4329,8 @@ class CaseAST(Scope_AST):
 class DefaultAST(CaseAST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
         condition: AST | None = None,
     ):
@@ -4485,12 +4353,12 @@ class DefaultAST(CaseAST):
 class CommentAST(AST):
     def __init__(
         self,
-        root: Node = None,
-        children: list = None,
+        root: Node | None = None,
+        children: list | None = None,
         parent=None,
-        symbolTable: SymbolTable | None = None,
+        symbol_table: SymbolTable | None = None,
     ):
-        super().__init__(root, children, parent, symbolTable)
+        super().__init__(root, children, parent, symbol_table)
         self.comment = ""
 
     def handle(self):

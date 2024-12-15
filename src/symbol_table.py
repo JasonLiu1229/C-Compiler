@@ -109,18 +109,18 @@ class SymbolTable:
         max_width += 1
         print(f"{'|':<2}{'Name':<15}{'|':<2}{'Value':<{max_width}}{'|':<2}")
         under = ""
-        for i in range(21 + max_width):
+        for _i in range(21 + max_width):
             under += "-"
         print(under)
         for item in self.table:
-            Object = item.object
+            item_object = item.object
             name = item.name
-            value = Object.value
+            value = item_object.value
             if value is None and not item.array:
                 value = "None"
             elif item.array:
-                value = f"{Object.values}"
-            elif isinstance(Object, VarNode) and Object.ptr:
+                value = f"{item_object.values}"
+            elif isinstance(item_object, VarNode) and item_object.ptr:
                 while isinstance(value, VarNode):
                     value = value.value
                 if value is None:
