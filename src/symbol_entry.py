@@ -104,8 +104,7 @@ class FuncSymbolEntry(SymbolEntry):
                 if self.parameters[i] != o.parameters[i]:
                     return False
             return True
-        else:
-            return False
+        return False
 
     def __ne__(self, o: object) -> bool:
         return not self.__eq__(o)

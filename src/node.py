@@ -52,8 +52,7 @@ class Node:
             if isinstance(other.value, str):
                 other.value = ord(other.value)
             return Node("int", floor(self.value / other.value))
-        else:
-            raise ZeroDivisionError
+        raise ZeroDivisionError
 
     def __truediv__(self, other):
         if other.value != 0:
@@ -65,8 +64,7 @@ class Node:
                 f"{'float' if not (isinstance(self.value, int) or isinstance(other.value, int)) else 'int'}",
                 self.value / other.value,
             )
-        else:
-            raise ZeroDivisionError
+        raise ZeroDivisionError
 
     def __add__(self, other):
         if isinstance(self.value, str):
@@ -123,8 +121,7 @@ class Node:
         #     other.value = ord(other.value)
         if not isinstance(self, VarNode) and not isinstance(other, VarNode):
             return self.value == other.value and self.key == other.key
-        else:
-            return self.value == other.value
+        return self.value == other.value
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -163,7 +160,7 @@ class Node:
         converts Node in a string format
         :return:
         """
-        return f"{self.key}\t:\t{str(self.value)}"
+        return f"{self.key}\t:\t{self.value!s}"
 
     def save_dot(self):
         """
@@ -191,7 +188,7 @@ class Node:
             dictionary[name].add(self.value)
 
     def llvm(self, scope: bool = False, index: int = 0) -> tuple[str, int]:
-        return f" ", index
+        return " ", index
 
     def mips(self, registers):
         out_global = ""
@@ -373,7 +370,7 @@ class VarNode(Node):
             elif self.type == "float":
                 var_type = "i32"
                 out += "float "
-            out += f" , align 4\n"
+            out += " , align 4\n"
         else:
             out += f"ptr @{index}, align 8\n"
         # align

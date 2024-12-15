@@ -78,89 +78,89 @@ class AstCreator(FileVisitor):
         """
         if isinstance(ctx, FileParser.InstrContext):
             return self.visitInstr(ctx)
-        elif isinstance(ctx, FileParser.ExprContext):
+        if isinstance(ctx, FileParser.ExprContext):
             return self.visitExpr(ctx)
-        elif isinstance(ctx, FileParser.RvarContext):
+        if isinstance(ctx, FileParser.RvarContext):
             return self.visitRvar(ctx)
-        elif isinstance(ctx, FileParser.RtypeContext):
+        if isinstance(ctx, FileParser.RtypeContext):
             return self.visitRtype(ctx)
-        elif isinstance(ctx, FileParser.AssignContext):
+        if isinstance(ctx, FileParser.AssignContext):
             return self.visitAssign(ctx)
-        elif isinstance(ctx, FileParser.LvarContext):
+        if isinstance(ctx, FileParser.LvarContext):
             return self.visitLvar(ctx)
-        elif isinstance(ctx, FileParser.DerefContext):
+        if isinstance(ctx, FileParser.DerefContext):
             return self.visitDeref(ctx)
-        elif isinstance(ctx, FileParser.PrintfContext):
+        if isinstance(ctx, FileParser.PrintfContext):
             return self.visitPrintf(ctx)
-        elif isinstance(ctx, FileParser.Var_declContext):
+        if isinstance(ctx, FileParser.Var_declContext):
             return self.visitVar_decl(ctx)
-        elif isinstance(ctx, FileParser.DeclrContext):
+        if isinstance(ctx, FileParser.DeclrContext):
             return self.visitDeclr(ctx)
-        elif isinstance(ctx, FileParser.TermContext):
+        if isinstance(ctx, FileParser.TermContext):
             return self.visitTerm(ctx)
-        elif isinstance(ctx, FileParser.FactorContext):
+        if isinstance(ctx, FileParser.FactorContext):
             return self.visitFactor(ctx)
-        elif isinstance(ctx, FileParser.PrimaryContext):
+        if isinstance(ctx, FileParser.PrimaryContext):
             return self.visitPrimary(ctx)
-        elif isinstance(ctx, FileParser.ScopeContext):
+        if isinstance(ctx, FileParser.ScopeContext):
             return self.visitScope(ctx)
-        elif isinstance(ctx, FileParser.For_loopContext):
+        if isinstance(ctx, FileParser.For_loopContext):
             return self.visitFor_loop(ctx)
-        elif isinstance(ctx, FileParser.While_loopContext):
+        if isinstance(ctx, FileParser.While_loopContext):
             return self.visitWhile_loop(ctx)
-        elif isinstance(ctx, FileParser.If_condContext):
+        if isinstance(ctx, FileParser.If_condContext):
             return self.visitIf_cond(ctx)
-        elif isinstance(ctx, FileParser.Else_condContext):
+        if isinstance(ctx, FileParser.Else_condContext):
             return self.visitElse_cond(ctx)
-        elif isinstance(ctx, FileParser.InitContext):
+        if isinstance(ctx, FileParser.InitContext):
             return self.visitInit(ctx)
-        elif isinstance(ctx, FileParser.CondContext):
+        if isinstance(ctx, FileParser.CondContext):
             return self.visitCond(ctx)
-        elif isinstance(ctx, FileParser.IncrContext):
+        if isinstance(ctx, FileParser.IncrContext):
             return self.visitIncr(ctx)
-        elif isinstance(ctx, FileParser.Cont_instrContext):
+        if isinstance(ctx, FileParser.Cont_instrContext):
             return self.visitCont_instr(ctx)
-        elif isinstance(ctx, FileParser.Break_instrContext):
+        if isinstance(ctx, FileParser.Break_instrContext):
             return self.visitBreak_instr(ctx)
-        elif isinstance(ctx, FileParser.Func_defnContext):
+        if isinstance(ctx, FileParser.Func_defnContext):
             return self.visitFunc_defn(ctx)
-        elif isinstance(ctx, FileParser.Func_declContext):
+        if isinstance(ctx, FileParser.Func_declContext):
             return self.visitFunc_decl(ctx)
-        elif isinstance(ctx, FileParser.Arg_listContext):
+        if isinstance(ctx, FileParser.Arg_listContext):
             return self.visitArg_list(ctx)
-        elif isinstance(ctx, FileParser.Func_callContext):
+        if isinstance(ctx, FileParser.Func_callContext):
             return self.visitFunc_call(ctx)
-        elif isinstance(ctx, FileParser.Func_scopeContext):
+        if isinstance(ctx, FileParser.Func_scopeContext):
             return self.visitFunc_scope(ctx)
-        elif isinstance(ctx, FileParser.Func_argContext):
+        if isinstance(ctx, FileParser.Func_argContext):
             return self.visitFunc_arg(ctx)
-        elif isinstance(ctx, FileParser.Param_declrContext):
+        if isinstance(ctx, FileParser.Param_declrContext):
             return self.visitParam_declr(ctx)
-        elif isinstance(ctx, FileParser.Param_listContext):
+        if isinstance(ctx, FileParser.Param_listContext):
             return self.visitParam_list(ctx)
-        elif isinstance(ctx, FileParser.Return_instrContext):
+        if isinstance(ctx, FileParser.Return_instrContext):
             return self.visitReturn_instr(ctx)
-        elif isinstance(ctx, FileParser.Array_declContext):
+        if isinstance(ctx, FileParser.Array_declContext):
             return self.visitArray_decl(ctx)
-        elif isinstance(ctx, FileParser.Array_elContext):
+        if isinstance(ctx, FileParser.Array_elContext):
             return self.visitArray_el(ctx)
-        elif isinstance(ctx, FileParser.Incl_statContext):
+        if isinstance(ctx, FileParser.Incl_statContext):
             return self.visitIncl_stat(ctx)
-        elif isinstance(ctx, FileParser.ScanfContext):
+        if isinstance(ctx, FileParser.ScanfContext):
             return self.visitScanf(ctx)
-        elif isinstance(ctx, FileParser.CompContext):
+        if isinstance(ctx, FileParser.CompContext):
             return self.visitComp(ctx)
-        elif isinstance(ctx, FileParser.Switch_instrContext):
+        if isinstance(ctx, FileParser.Switch_instrContext):
             return self.visitSwitch_instr(ctx)
-        elif isinstance(ctx, FileParser.Case_instrContext):
+        if isinstance(ctx, FileParser.Case_instrContext):
             return self.visitCase_instr(ctx)
-        elif isinstance(ctx, FileParser.Default_instrContext):
+        if isinstance(ctx, FileParser.Default_instrContext):
             return self.visitDefault_instr(ctx)
-        elif isinstance(ctx, FileParser.Switch_scopeContext):
+        if isinstance(ctx, FileParser.Switch_scopeContext):
             return self.visitSwitch_scope(ctx)
-        elif isinstance(ctx, FileParser.CommentContext):
+        if isinstance(ctx, FileParser.CommentContext):
             return self.visitComment(ctx)
-        elif isinstance(ctx, antlr4.tree.Tree.TerminalNodeImpl) and ctx.getText() in [
+        if isinstance(ctx, antlr4.tree.Tree.TerminalNodeImpl) and ctx.getText() in [
             "{",
             "}",
         ]:
@@ -832,7 +832,7 @@ class AstCreator(FileVisitor):
                             else:
                                 error = f"Too many arguments passed to function {entry.name}, expected {len(entry.parameters)}, got {len(ast.args)}\n"
                             # get instruction in the file where the warning is by using column and line number
-                            f = open(self.file_name, "r")
+                            f = open(self.file_name)
                             lines = f.readlines()
                             line = lines[ast.line - 1]
                             f.close()
@@ -908,35 +908,34 @@ class AstCreator(FileVisitor):
                         raise AttributeError(
                             f"Redeclaration of function {ast.root.key} with different return type"
                         )
-                    elif len(match.parameters) != len(ast.params):
+                    if len(match.parameters) != len(ast.params):
                         raise AttributeError(
                             f"Redeclaration of function {ast.root.key} with different number of parameters"
                         )
                     for param in ast.params:
-                        if not param in match.parameters:
+                        if param not in match.parameters:
                             raise AttributeError(
                                 f"Redeclaration of function {ast.root.key} with different parameters"
                             )
                     raise AttributeError(f"Redeclaration of function {ast.root.key}")
-                else:
-                    new_entry = FuncSymbolEntry(ast.root)
-                    param_names = []
-                    for param in ast.params:
-                        if param.key in param_names:
-                            raise AttributeError(
-                                f"Redefinition of parameter {param.key}"
-                            )
-                        new_entry.parameters.append(FunctionParameter(param))
-                        ast.symbolTable.insert(SymbolEntry(param))
-                        param_names.append(param.key)
-                    # add symbol table of ast to function entry in symbol table
-                    new_entry.symbol_table = ast.symbolTable
-                    # insert function into symbol table
-                    ast.parent.symbolTable.insert(new_entry)
+                new_entry = FuncSymbolEntry(ast.root)
+                param_names = []
+                for param in ast.params:
+                    if param.key in param_names:
+                        raise AttributeError(
+                            f"Redefinition of parameter {param.key}"
+                        )
+                    new_entry.parameters.append(FunctionParameter(param))
+                    ast.symbolTable.insert(SymbolEntry(param))
+                    param_names.append(param.key)
+                # add symbol table of ast to function entry in symbol table
+                new_entry.symbol_table = ast.symbolTable
+                # insert function into symbol table
+                ast.parent.symbolTable.insert(new_entry)
                 ast.symbolTable.parent = ast.parent.symbolTable
                 node = ast
                 continue
-            elif isinstance(ast, FuncScopeAST) or isinstance(ast, FuncDefnAST):
+            if isinstance(ast, FuncScopeAST) or isinstance(ast, FuncDefnAST):
                 # add parent symbol table as parent of current symbol table
                 ast.symbolTable.parent = ast.parent.symbolTable
                 temp_exists = False
@@ -977,19 +976,19 @@ class AstCreator(FileVisitor):
                             raise AttributeError(
                                 f"Redefinition of function {ast.root.key} with different return type"
                             )
-                        elif len(new_entry.parameters) != len(match.parameters):
+                        if len(new_entry.parameters) != len(match.parameters):
                             raise AttributeError(
                                 f"Redefinition of function {ast.root.key} with different number of parameters"
                             )
                         for param in new_entry.parameters:
-                            if not param in match.parameters:
+                            if param not in match.parameters:
                                 raise AttributeError(
                                     f"Redefinition of function {ast.root.key} with different parameters"
                                 )
                         raise AttributeError(
                             f"Redeclaration of function {ast.root.key} with different signature"
                         )
-                    elif match.defined:
+                    if match.defined:
                         raise AttributeError(f"Redefinition of function {ast.root.key}")
                     match.defined = True
                     # ast.parent.symbolTable.refresh()
@@ -1050,7 +1049,7 @@ class AstCreator(FileVisitor):
                         raise AttributeError(
                             f"Redeclaration of variable {match.name} with different type"
                         )
-                    elif not match.array:
+                    if not match.array:
                         raise AttributeError(
                             f"Redeclaration of variable {match.name} as array"
                         )
@@ -1145,7 +1144,7 @@ class AstCreator(FileVisitor):
                             temp_symbol = temp_symbol.parent
                             if temp_symbol is None:
                                 # get instruction in the file where the warning is by using column and line number
-                                f = open(self.file_name, "r")
+                                f = open(self.file_name)
                                 lines = f.readlines()
                                 line = lines[ast.line - 1]
                                 f.close()
@@ -1192,42 +1191,41 @@ class AstCreator(FileVisitor):
                             raise ReferenceError(
                                 f"Variable {child.value} was not declared in this scope"
                             )
+                        index = ast.children.index(child)
+                        matches = temp_symbol.lookup(child.value)
+                        if len(matches) == 0:
+                            raise ReferenceError(
+                                f"Variable {ast.children[0].key} undeclared"
+                            )
+                        if len(matches) > 1:
+                            raise ReferenceError(
+                                f"Multiple matches for variable {ast.children[0].key}"
+                            )
+                        matches[0].used = True
+                        if not matches[0].returned:
+                            matches[0].returned = returned
+                            # matches[0].object.known = True
                         else:
-                            index = ast.children.index(child)
-                            matches = temp_symbol.lookup(child.value)
-                            if len(matches) == 0:
-                                raise ReferenceError(
-                                    f"Variable {ast.children[0].key} undeclared"
-                                )
-                            if len(matches) > 1:
-                                raise ReferenceError(
-                                    f"Multiple matches for variable {ast.children[0].key}"
-                                )
-                            matches[0].used = True
-                            if not matches[0].returned:
-                                matches[0].returned = returned
-                                # matches[0].object.known = True
-                            else:
-                                matches[0].object.known = False
-                                temp_parent = matches[0].object.parent
-                                while temp_parent is not None and isinstance(
-                                    temp_parent, Node
-                                ):
-                                    temp_parent.known = False
-                                    temp_symbol.update(temp_parent)
-                                    temp_symbol.refresh()
-                                    temp_parent = temp_parent.parent
-
-                            if (
-                                isinstance(matches[0].object, FuncParameter)
-                                or child.type is None
+                            matches[0].object.known = False
+                            temp_parent = matches[0].object.parent
+                            while temp_parent is not None and isinstance(
+                                temp_parent, Node
                             ):
-                                ast.children[index].type = matches[0].type
-                            if evaluate and not in_loop and not matches[0].returned:
-                                ast.children[index] = copy.deepcopy(matches[0].object)
-                                if isinstance(ast.children[index], FuncParameter):
-                                    ast.children[index].parent = ast
-                                    evaluate = False
+                                temp_parent.known = False
+                                temp_symbol.update(temp_parent)
+                                temp_symbol.refresh()
+                                temp_parent = temp_parent.parent
+
+                        if (
+                            isinstance(matches[0].object, FuncParameter)
+                            or child.type is None
+                        ):
+                            ast.children[index].type = matches[0].type
+                        if evaluate and not in_loop and not matches[0].returned:
+                            ast.children[index] = copy.deepcopy(matches[0].object)
+                            if isinstance(ast.children[index], FuncParameter):
+                                ast.children[index].parent = ast
+                                evaluate = False
 
                 if not handle:
                     continue
@@ -1251,7 +1249,7 @@ class AstCreator(FileVisitor):
                     match, total = AST.getEntry(var)
                     if total == -1:
                         raise ReferenceError(f"Variable {var.value} undeclared")
-                    elif total > 1:
+                    if total > 1:
                         raise ReferenceError(
                             f"Multiple matches for variable {var.value}"
                         )
@@ -1277,7 +1275,7 @@ class AstCreator(FileVisitor):
                             temp_symbol = temp_symbol.parent
                             if temp_symbol is None:
                                 # get instruction in the file where the warning is by using column and line number
-                                f = open(self.file_name, "r")
+                                f = open(self.file_name)
                                 lines = f.readlines()
                                 line = lines[ast.line - 1]
                                 f.close()
@@ -1295,7 +1293,7 @@ class AstCreator(FileVisitor):
                             raise ReferenceError(
                                 f"Variable {ast.condition.value} undeclared"
                             )
-                        elif not in_loop:
+                        if not in_loop:
                             ast.condition = match[0].object
                         ast.condition.type = match[0].type
                 # resolve the cases
@@ -1364,7 +1362,7 @@ class AstCreator(FileVisitor):
                         raise ReferenceError(
                             f"Variable {ast.incr.children[0].key} was not declared"
                         )
-                    raise ReferenceError(f"Incrementer must be a variable")
+                    raise ReferenceError("Incrementer must be a variable")
                 # ast.incr.children[0] = entry
                 # entry.parent = ast.incr
                 ast.children[0].children.append(
@@ -1390,7 +1388,7 @@ class AstCreator(FileVisitor):
             elif ast.root.key == "assign" and ast.root.value is not None:
                 if not isinstance(ast.children[0], VarNode):
                     raise AttributeError(
-                        f"Attempting to assign to a non variable type object"
+                        "Attempting to assign to a non variable type object"
                     )
                 if not evaluate:
                     node = ast
@@ -1481,7 +1479,7 @@ class AstCreator(FileVisitor):
                     ):
                         if (ast.children[i].type, ast.type) not in conversions:
                             raise AttributeError("Variable assigned to wrong type")
-                        elif (ast.children[i].type, ast.type) not in conv_promotions:
+                        if (ast.children[i].type, ast.type) not in conv_promotions:
                             # clang style warning (with warning in pink)
                             warning_str = "\033[95mwarning: \033[0m"
                             if (
@@ -1500,7 +1498,7 @@ class AstCreator(FileVisitor):
                             ):
                                 warning_str += f"implicit conversion from '{ast.children[i].type}' to '{ast.type}' changes value from {ast.children[i].value} to {self.convert(ast.children[i].value, ast.type)}"
                             # get instruction in the file where the warning is by using column and line number
-                            f = open(self.file_name, "r")
+                            f = open(self.file_name)
                             lines = f.readlines()
                             line = lines[ast.line - 1]
                             f.close()
@@ -1547,17 +1545,15 @@ class AstCreator(FileVisitor):
                 if not evaluate:
                     node = ast
                     continue
-                if (
+                if ((
                     not isinstance(assignee, VarNode)
                     and not isinstance(assignee.parent, ArrayNode)
-                ) and evaluate:
-                    raise AttributeError(f"Attempting to assign to a non-variable type")
-                elif (
+                ) and evaluate) or (
                     not evaluate
                     and not isinstance(assignee, Node)
                     and assignee.key != "var"
                 ):
-                    raise AttributeError(f"Attempting to assign to a non-variable type")
+                    raise AttributeError("Attempting to assign to a non-variable type")
                 if isinstance(assignee.parent, ArrayNode):
                     if assignee.parent.const:
                         raise AttributeError(
@@ -1568,7 +1564,7 @@ class AstCreator(FileVisitor):
                     if rtype != assignee.parent.type and not ast.children[1].cast:
                         if (assignee.parent.type, rtype) not in conversions:
                             raise AttributeError("Variable assigned to wrong type")
-                        elif (assignee.parent.type, rtype) not in conv_promotions:
+                        if (assignee.parent.type, rtype) not in conv_promotions:
                             self.warnings.append(
                                 f"Implicit conversion from {ast.root.value} to {ast.children[0].type} for variable {ast.children[0].key}"
                             )
@@ -1588,7 +1584,7 @@ class AstCreator(FileVisitor):
                     if rtype != assignee.type and not ast.children[1].cast:
                         if (assignee.type, rtype) not in conversions:
                             raise AttributeError("Variable assigned to wrong type")
-                        elif (assignee.type, rtype) not in conv_promotions:
+                        if (assignee.type, rtype) not in conv_promotions:
                             self.warnings.append(
                                 f"Implicit conversion from {ast.root.value} to {ast.children[0].type} for variable {ast.children[0].key}"
                             )
@@ -1748,8 +1744,8 @@ class AstCreator(FileVisitor):
                     handle = True
                     for val in ast.children:
                         if (
-                            isinstance(val, Node)
-                            and val.key == "var"
+                            (isinstance(val, Node)
+                            and val.key == "var")
                             or isinstance(val, AST)
                         ):
                             node = ast
@@ -1764,15 +1760,11 @@ class AstCreator(FileVisitor):
                 isinstance(ast, TermAST)
                 and ast.root.value in ["++", "--"]
                 and not evaluate
-            ):
-                continue
-            elif (
+            ) or (
                 isinstance(ast, FactorAST)
                 and ast.root.value in ["++", "--"]
                 and not evaluate
-            ):
-                continue
-            elif isinstance(ast, ArrayElementAST) and not evaluate:
+            ) or (isinstance(ast, ArrayElementAST) and not evaluate):
                 continue
             elif ast is not None:
                 if isinstance(ast, TermAST) and ast.root.value == "++" and evaluate:
@@ -1804,7 +1796,7 @@ class AstCreator(FileVisitor):
                     for warning in warnings_handle:
                         # get line where warning is
                         warning_str = "\033[95mwarning: \033[0m"
-                        f = open(self.file_name, "r")
+                        f = open(self.file_name)
                         lines = f.readlines()
                         f.close()
                         line = lines[ast.line - 1]
@@ -1840,7 +1832,7 @@ class AstCreator(FileVisitor):
                     for warning in warnings_handle:
                         # get line where warning is
                         warning_str = "\033[95mwarning: \033[0m"
-                        f = open(self.file_name, "r")
+                        f = open(self.file_name)
                         lines = f.readlines()
                         f.close()
                         line = lines[ast.line - 1]
@@ -2010,12 +2002,11 @@ class AstCreator(FileVisitor):
         """
         if ctx.children[0].getText().isdigit():
             return Node(keywords_datatype[0], int(ctx.children[0].getText()))
-        elif isfloat(ctx.children[0].getText()):
+        if isfloat(ctx.children[0].getText()):
             return Node(
                 keywords_datatype[1], Decimal(ctx.children[0].getText()).__float__()
             )
-        else:
-            return Node(keywords_datatype[2], ctx.children[0].getText()[1:-1])
+        return Node(keywords_datatype[2], ctx.children[0].getText()[1:-1])
 
     def visitAssign(self, ctx: FileParser.AssignContext):
         """
@@ -2060,11 +2051,10 @@ class AstCreator(FileVisitor):
             out.column = ctx.start.column
             out.line = ctx.start.line
             return out
-        else:
-            out = VarDeclrAST(Node("var_declr", None))
-            out.column = ctx.start.column
-            out.line = ctx.start.line
-            return out
+        out = VarDeclrAST(Node("var_declr", None))
+        out.column = ctx.start.column
+        out.line = ctx.start.line
+        return out
 
     def visitLvar(self, ctx: FileParser.LvarContext):
         """
@@ -2161,19 +2151,18 @@ class AstCreator(FileVisitor):
 
     def visitInit(self, ctx: FileParser.InitContext):
         if len(ctx.children) == 1:
-            return
+            return None
+        out = InitAST(Node("init", None))
+        out.column = ctx.start.column
+        out.line = ctx.start.line
+        index = 0
+        if ctx.children[index].getText() in keywords_datatype:
+            out.type = ctx.children[index].getText()
         else:
-            out = InitAST(Node("init", None))
-            out.column = ctx.start.column
-            out.line = ctx.start.line
-            index = 0
-            if ctx.children[index].getText() in keywords_datatype:
-                out.type = ctx.children[index].getText()
-            else:
-                raise TypeError(
-                    f"Variable declared with invalid type {ctx.children[0].getText()}"
-                )
-            return out
+            raise TypeError(
+                f"Variable declared with invalid type {ctx.children[0].getText()}"
+            )
+        return out
 
     def visitCond(self, ctx: FileParser.CondContext):
         ast = CondAST()
@@ -2388,15 +2377,14 @@ class AstCreator(FileVisitor):
             )
         # if len(ast.values) == 0:
         #     ast.values = [None for i in range(ast.size)]
-        else:
-            for value in ast.values:
-                if value.key != ast.type:
-                    self.warnings.append(
-                        f"Implicit cast from {value.key} to {ast.type} in line {ctx.start.line} for "
-                        f"array element '{value.value}' of array '{ast.root.key}' with index "
-                        f"{ast.values.index(value)}. This element will be casted to {self.convert(value.value, ast.type)}"
-                    )
-                value.parent = ast
+        for value in ast.values:
+            if value.key != ast.type:
+                self.warnings.append(
+                    f"Implicit cast from {value.key} to {ast.type} in line {ctx.start.line} for "
+                    f"array element '{value.value}' of array '{ast.root.key}' with index "
+                    f"{ast.values.index(value)}. This element will be casted to {self.convert(value.value, ast.type)}"
+                )
+            value.parent = ast
         return ast
 
     def visitArray_el(self, ctx: FileParser.Array_elContext):
@@ -2480,19 +2468,17 @@ class AstCreator(FileVisitor):
                     return value
                 if isinstance(value, str):
                     return ord(value)
-                else:
-                    return int(value)
-            elif d_type == "float":
+                return int(value)
+            if d_type == "float":
                 if isinstance(value, float):
                     return value
                 if isinstance(value, str):
                     return float(ord(value))
-                else:
-                    return float(value)
-            elif d_type == "char":
+                return float(value)
+            if d_type == "char":
                 if isinstance(value, str):
                     return value
-                elif value == 0:
+                if value == 0:
                     # return utf-8 null character
                     return value
                 return chr(value)

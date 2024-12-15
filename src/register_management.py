@@ -34,11 +34,10 @@ class Manager:  # Manager class for register management using LRU
         """
         if self.head is None:
             return None
-        else:
-            register = self.head
-            self.head = self.head.next
-            self.head.prev = None
-            return register
+        register = self.head
+        self.head = self.head.next
+        self.head.prev = None
+        return register
 
     def LRU(self, in_object):
         return
@@ -508,22 +507,21 @@ class singleManager:
     def findRegister(self, name):
         if name == "gp":
             return self.gp
-        elif name == "sp":
+        if name == "sp":
             return self.sp
-        elif name == "fp":
+        if name == "fp":
             return self.fp
-        elif name == "ra":
+        if name == "ra":
             return self.ra
-        elif name == "zero":
+        if name == "zero":
             return self.zero
-        elif name == "at":
+        if name == "at":
             return self.at
-        elif name == "lo":
+        if name == "lo":
             return self.lo
-        elif name == "hi":
+        if name == "hi":
             return self.hi
-        else:
-            return None
+        return None
 
 
 class dataManager:
@@ -591,18 +589,17 @@ class Registers:
     def searchRegister(self, name):
         if name.startswith("f"):
             return self.floatManager.findRegister(name)
-        elif name.startswith("t"):
+        if name.startswith("t"):
             return self.temporaryManager.findRegister(name)
-        elif name.startswith("a"):
+        if name.startswith("a"):
             return self.argumentManager.findRegister(name)
-        elif name.startswith("s"):
+        if name.startswith("s"):
             return self.savedManager.findRegister(name)
-        elif name.startswith("k"):
+        if name.startswith("k"):
             return self.reservedManager.findRegister(name)
-        elif name.startswith("v"):
+        if name.startswith("v"):
             return self.returnManager.findRegister(name)
-        else:
-            return self.singleManager.findRegister(name)
+        return self.singleManager.findRegister(name)
 
     def shuffle_name(self, register_name: str):
         if register_name.startswith("f"):

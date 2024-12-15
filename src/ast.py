@@ -92,7 +92,7 @@ class ErrorListener(antlr4.error.ErrorListener.ErrorListener):
                     line_text += token.text
         else:
             line_text = input_stream.strdata.split("\n")[line - 1]
-        out = f"Error at line {str(line)}:{str(column)} : {msg}\nLine where it occurred: {line_text}"
+        out = f"Error at line {line!s}:{column!s} : {msg}\nLine where it occurred: {line_text}"
         raise ParseCancellationException(out)
 
     def reportAmbiguity(
@@ -124,10 +124,9 @@ def isfloat(string):
 def checkType(inputStr: str):
     if inputStr.isdigit():
         return "int"
-    elif isfloat(inputStr):
+    if isfloat(inputStr):
         return "float"
-    else:
-        return "char"
+    return "char"
 
 
 def getType(inputValue):
@@ -137,8 +136,7 @@ def getType(inputValue):
         return "float"
     if isinstance(inputValue, str):
         return "char"
-    else:
-        return None
+    return None
 
 
 def getTypeFromFormat(inputValue):
@@ -150,8 +148,7 @@ def getTypeFromFormat(inputValue):
         return "char"
     if inputValue == "s":
         return "string"
-    else:
-        return None
+    return None
 
 
 def convert(value, d_type):
@@ -167,29 +164,27 @@ def convert(value, d_type):
                 return value
             if isinstance(value, str):
                 return ord(value)
-            else:
-                return int(value)
-        elif d_type == "float":
+            return int(value)
+        if d_type == "float":
             if isinstance(value, float):
                 return value
             if isinstance(value, str):
                 return float(ord(value))
-            else:
-                return float(value)
-        elif d_type == "char":
+            return float(value)
+        if d_type == "char":
             if isinstance(value, str):
                 return value
             return chr(value)
-    except Exception as e:
+    except Exception:
         raise RuntimeError("Bad Cast")
 
 
 def getLLVMType(ObjectType: str) -> str | None:
     if ObjectType == "int":
         return "i32"
-    elif ObjectType == "float":
+    if ObjectType == "float":
         return "float"
-    elif ObjectType == "char":
+    if ObjectType == "char":
         return "i8"
     return None
 
@@ -312,7 +307,7 @@ class AST:
                     ):
                         temp_parent.parent.children.remove(temp_parent)
                     temp_parent = temp_parent.parent
-            line = open(filename, "r").readlines()[entry.object.parent.line - 1]
+            line = open(filename).readlines()[entry.object.parent.line - 1]
             line = (
                 line[: entry.object.parent.column]
                 + "\u0332"
@@ -334,18 +329,15 @@ class AST:
                 visited.append(current)
                 if isinstance(current, Node):
                     continue
-                else:
-                    for i in current.children:
-                        not_visited.append(i)
+                for i in current.children:
+                    not_visited.append(i)
 
         visited.reverse()
 
         variables = []
         for i in visited:
             if isinstance(i, Node):
-                if isinstance(i, VarNode):
-                    variables.append(i)
-                elif i.key == "var":
+                if isinstance(i, VarNode) or i.key == "var":
                     variables.append(i)
         return variables
 
@@ -363,8 +355,7 @@ class AST:
                     return False
                 temp_parent = temp_parent.parent
             return True
-        else:
-            return self.symbolTable.parent is None
+        return self.symbolTable.parent is None
 
     def mips(self, registers: Registers):
         out_global = ""
@@ -896,7 +887,7 @@ class AST:
                     out = temp_symbol.lookup(entry)
                     out[0].returned = True
                     return (out[0].object, len(out)) if out is not None else ([], None)
-                elif temp_symbol.exists(entry.value):
+                if temp_symbol.exists(entry.value):
                     out = temp_symbol.lookup(entry.value)
                     out[0].returned = True
                     return (out[0].object, len(out)) if out is not None else ([], None)
@@ -1095,7 +1086,7 @@ class AST:
                     new_key = node.key
                 else:
                     new_key = node.root.key
-                if new_key not in nodes.keys():
+                if new_key not in nodes:
                     nodes[new_key] = [node]
                     if (
                         isinstance(node, InstrAST) and not isinstance(node, ReturnInstr)
@@ -1110,9 +1101,9 @@ class AST:
                     if isinstance(node, InstrAST) or isinstance(node, FuncDefnAST):
                         continue
                     if isinstance(node, Node):
-                        out = f'\t"{new_key}_{str(len(nodes[new_key]) - 1)}" [label="{node.value if node.value is not None else new_key}"];\n'
+                        out = f'\t"{new_key}_{len(nodes[new_key]) - 1!s}" [label="{node.value if node.value is not None else new_key}"];\n'
                     else:
-                        out = f'\t"{new_key}_{str(len(nodes[new_key]) - 1)}" [label="{node.root.value if node.root.value is not None else new_key}"];\n'
+                        out = f'\t"{new_key}_{len(nodes[new_key]) - 1!s}" [label="{node.root.value if node.root.value is not None else new_key}"];\n'
 
                 f.write(out)
             f.write("\n\t// Edges:\n")
@@ -1482,12 +1473,11 @@ class InstrAST(AST):
         # if everything has been constant folded
         if len(self.children) == 1 and isinstance(self.children[0], Node):
             return self.children[0].mips(registers)
-        else:
-            for child in self.children:
-                out = child.mips(registers)
-                out_local += out[0]
-                out_global += out[1]
-                out_list += out[2]
+        for child in self.children:
+            out = child.mips(registers)
+            out_local += out[0]
+            out_global += out[1]
+            out_list += out[2]
 
         return out_local, out_global, out_list
 
@@ -1539,34 +1529,33 @@ class PrintfAST(AST):
                     matches = temp_symbol.lookup(self.args[i].value)
                     if len(matches) > 1:
                         raise Exception("Ambiguous variable name")
-                    else:
-                        self.args[i] = matches[0]
-                        var_type = self.args[i].type
-                        format_type = getTypeFromFormat(self.format_specifiers[i][-1])
-                        if var_type == format_type:
-                            continue
-                        # check if the type of the variable matches
-                        if (var_type, format_type) not in conversions and not self.args[
-                            i
-                        ].cast:
-                            if (
-                                var_type == "char"
-                                and self.args[i].array
-                                and format_type == "string"
-                            ):
-                                continue
-                            raise Exception(
-                                f"No possible conversion from {var_type} to {format_type}"
-                            )
+                    self.args[i] = matches[0]
+                    var_type = self.args[i].type
+                    format_type = getTypeFromFormat(self.format_specifiers[i][-1])
+                    if var_type == format_type:
+                        continue
+                    # check if the type of the variable matches
+                    if (var_type, format_type) not in conversions and not self.args[
+                        i
+                    ].cast:
                         if (
-                            var_type,
-                            format_type,
-                        ) not in conv_promotions and not self.args[i].cast:
-                            # clang style warning
-                            warnings.append(
-                                f"Format specifies type '{format_type}' but the argument has type '{var_type}'\n"
-                                f"Implicit conversion from '{var_type}' to '{format_type}'"
-                            )
+                            var_type == "char"
+                            and self.args[i].array
+                            and format_type == "string"
+                        ):
+                            continue
+                        raise Exception(
+                            f"No possible conversion from {var_type} to {format_type}"
+                        )
+                    if (
+                        var_type,
+                        format_type,
+                    ) not in conv_promotions and not self.args[i].cast:
+                        # clang style warning
+                        warnings.append(
+                            f"Format specifies type '{format_type}' but the argument has type '{var_type}'\n"
+                            f"Implicit conversion from '{var_type}' to '{format_type}'"
+                        )
         if not evaluate:
             return self, warnings
 
@@ -1580,12 +1569,12 @@ class PrintfAST(AST):
             if current_specifier[-1] == "d":
                 # check if the child is a node
                 if isinstance(current_child, VarNode):
-                    if not current_child.type == "int":
+                    if current_child.type != "int":
                         if current_child.type == "float":
                             current_child.value = int(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'float' to 'int'"
+                                    "Implicit conversion from 'float' to 'int'"
                                 )
                         elif current_child.type == "char":
                             current_child.value = ord(current_child.value)
@@ -1603,7 +1592,7 @@ class PrintfAST(AST):
                             current_child.value = int(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'float' to 'int'"
+                                    "Implicit conversion from 'float' to 'int'"
                                 )
                         elif (
                             isinstance(current_child.value, str)
@@ -1625,12 +1614,12 @@ class PrintfAST(AST):
             if current_specifier[-1] == "i":
                 # type can accept hexa, octal, decimal and binary
                 if isinstance(current_child, VarNode):
-                    if not current_child.type == "int":
+                    if current_child.type != "int":
                         if current_child.type == "float":
                             current_child.value = int(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'float' to 'int'"
+                                    "Implicit conversion from 'float' to 'int'"
                                 )
                         elif current_child.type == "char":
                             current_child.value = ord(current_child.value)
@@ -1644,7 +1633,7 @@ class PrintfAST(AST):
                             current_child.value = int(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'float' to 'int'"
+                                    "Implicit conversion from 'float' to 'int'"
                                 )
                         elif (
                             isinstance(current_child.value, str)
@@ -1662,18 +1651,18 @@ class PrintfAST(AST):
                     current_child.key = "int"
             if current_specifier[-1] == "c":
                 if isinstance(current_child, VarNode):
-                    if not current_child.type == "char":
+                    if current_child.type != "char":
                         if current_child.type == "float":
                             current_child.value = int(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'float' to 'char'"
+                                    "Implicit conversion from 'float' to 'char'"
                                 )
                         elif current_child.type == "int":
                             current_child.value = chr(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'int' to 'char'"
+                                    "Implicit conversion from 'int' to 'char'"
                                 )
                         elif current_child.value is None:
                             current_child.value = random.choice(string.ascii_letters)
@@ -1688,13 +1677,13 @@ class PrintfAST(AST):
                             current_child.value = int(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'float' to 'char'"
+                                    "Implicit conversion from 'float' to 'char'"
                                 )
                         elif isinstance(current_child.value, int):
                             current_child.value = chr(current_child.value)
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'int' to 'char'"
+                                    "Implicit conversion from 'int' to 'char'"
                                 )
                         elif current_child.value is None:
                             current_child.value = random.choice(string.ascii_letters)
@@ -1708,7 +1697,7 @@ class PrintfAST(AST):
                     current_child.value = str(ord(current_child.value))
             if current_specifier[-1] == "f":
                 if isinstance(current_child, VarNode):
-                    if not current_child.type == "float":
+                    if current_child.type != "float":
                         if current_child.type == "int":
                             current_child.value = array("f", [current_child.value])[0]
                         elif current_child.type == "char":
@@ -1724,7 +1713,7 @@ class PrintfAST(AST):
                         if isinstance(current_child.value, int):
                             current_child.value = array("f", [current_child.value])[0]
                             warnings.append(
-                                f"Implicit conversion from 'int' to 'float'"
+                                "Implicit conversion from 'int' to 'float'"
                             )
                         elif (
                             isinstance(current_child.value, str)
@@ -1735,7 +1724,7 @@ class PrintfAST(AST):
                             )[0]
                             if not current_child.cast:
                                 warnings.append(
-                                    f"Implicit conversion from 'char' to 'float'"
+                                    "Implicit conversion from 'char' to 'float'"
                                 )
                         elif current_child.value is None:
                             current_child.value = random.uniform(0, 10**length)
@@ -2024,12 +2013,11 @@ class PrintfAST(AST):
     def getType(input):
         if type(input) == int:
             return 0
-        elif type(input) == float:
+        if type(input) == float:
             return 1
-        elif type(input) == str:
+        if type(input) == str:
             return 2
-        else:
-            return 3
+        return 3
 
     def mips(self, registers: Registers):
         out_local = ""
@@ -2047,13 +2035,13 @@ class PrintfAST(AST):
             if isinstance(i, Register):
                 continue
             if i in registers.globalObjects.data[0].keys() or (
-                isinstance(i, str) and (len(i) == 0) or isinstance(i, int)
+                (isinstance(i, str) and (len(i) == 0)) or isinstance(i, int)
             ):
                 continue
             # if match regex r"\\[0-9A-Fa-f]{2}", then skip
             if isinstance(i, str) and re.match(r"\\[0-9A-Fa-f]{2}", i):
                 continue
-            elif (
+            if (
                 isinstance(i, float) and i not in registers.globalObjects.data[1].keys()
             ):
                 # cast the float to be representable in mips
@@ -2076,7 +2064,7 @@ class PrintfAST(AST):
             # change so it calls the right print function
             if isinstance(list_format[i], str) and len(list_format[i]) == 0:
                 continue
-            elif isinstance(list_format[i], ArrayElementAST):
+            if isinstance(list_format[i], ArrayElementAST):
                 # resolve the array element ast
                 node = list_format[i].root
                 out_local += f"\tmov{'.s' if node.type == 'float' else 'e'} ${'f12' if node.type == 'float' else 'a0'}, ${node.register.name}\n"
@@ -2106,7 +2094,7 @@ class PrintfAST(AST):
                 out_local += f"\tli ${temp_node.register.name}, 0\n"
                 temp_node.register.shuffle()
                 out_local += f"\tadd ${list_format[i].register.name}, ${list_format[i].register.name}, ${temp_node.register.name}\n"
-                out_local += f"\tli $v0, 4\n"
+                out_local += "\tli $v0, 4\n"
                 out_local += f"\tmov{'e' if list_format[i].type != 'float' else '.s'} $a0, ${list_format[i].register.name}\n"
                 out_local += "\tsyscall\n"
                 out_list.append("a0")
@@ -2168,22 +2156,22 @@ class PrintfAST(AST):
                     out_list.append("a0")
             elif self.getType(list_format[i]) == 3:  # if the type is a variable
                 var = list_format[i]
-                out_local += f"\tlw $a0, "
+                out_local += "\tlw $a0, "
                 if var.type == "int":
                     out_local += (
                         f"int_{var.key if isinstance(var, VarNode) else var.value}\n"
                     )
-                    out_local += f"\tli $v0, 1\n"
+                    out_local += "\tli $v0, 1\n"
                 elif var.type == "float":
                     out_local += (
                         f"flt_{var.key if isinstance(var, VarNode) else var.value}\n"
                     )
-                    out_local += f"\tli $v0, 2\n"
+                    out_local += "\tli $v0, 2\n"
                 elif var.type == "char":
                     out_local += (
                         f"chr_{var.key if isinstance(var, VarNode) else var.value}\n"
                     )
-                    out_local += f"\tli $v0, 4\n"
+                    out_local += "\tli $v0, 4\n"
                 out_local += "\tsyscall\n"
         # out_list = [registers.argumentManager.head.name]
         # self.register = registers.argumentManager.head
@@ -2249,7 +2237,7 @@ class VarDeclrAST(AST):
     def handle(self):
         if self.root.key == "assign":
             if not isinstance(self.children[0], VarNode):
-                raise AttributeError(f"'Attempting to assign to a non-variable type'")
+                raise AttributeError("'Attempting to assign to a non-variable type'")
             # assign value
             if self.children[0].ptr:
                 self.children[0].value = self.children[1]
@@ -2273,8 +2261,7 @@ class VarDeclrAST(AST):
             #     if self.children[0].total_deref != self.children[1].total_deref + 1:
             #         raise AttributeError(f"Incompatible types for {self.children[0].key} and {self.children[1].key}.")
             return self.children[0]
-        else:
-            return self.children[0]
+        return self.children[0]
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
         pass
@@ -2335,7 +2322,7 @@ class TermAST(AST):
             if isinstance(child, AST):
                 return self
             if isinstance(child, VarNode) and child.ptr:
-                raise RuntimeError(f"'Cannot use pointer as a term'")
+                raise RuntimeError("'Cannot use pointer as a term'")
             if child.value is None and not isinstance(child, ArrayNode):
                 return self
             if child.key == "var":
@@ -2355,12 +2342,12 @@ class TermAST(AST):
         elif self.root.value == "++":
             if len(self.children) != 1:
                 raise RuntimeError(
-                    f"'Expected one variable for increment operation, got multiple'"
+                    "'Expected one variable for increment operation, got multiple'"
                 )
             if not isinstance(self.children[0], VarNode):
                 if not self.children[0].parent.array:
                     raise AttributeError(
-                        f"'Attempting to decrement a non-variable type object'"
+                        "'Attempting to decrement a non-variable type object'"
                     )
             node = self.children[0]
             if isinstance(node, VarNode):
@@ -2377,12 +2364,12 @@ class TermAST(AST):
         elif self.root.value == "--":
             if len(self.children) != 1:
                 raise RuntimeError(
-                    f"'Expected one variable for increment operation, got multiple'"
+                    "'Expected one variable for increment operation, got multiple'"
                 )
             if not isinstance(self.children[0], VarNode):
                 if not self.children[0].parent.array:
                     raise AttributeError(
-                        f"'Attempting to decrement a non-variable type object'"
+                        "'Attempting to decrement a non-variable type object'"
                     )
             node = self.children[0]
             if isinstance(node, VarNode):
@@ -2439,12 +2426,12 @@ class TermAST(AST):
                 not isinstance(self.children[0], ArrayNode)
                 and isinstance(self.children[1], ArrayNode)
             ):
-                raise RuntimeError(f"'Attempting to compare array with non-array'")
+                raise RuntimeError("'Attempting to compare array with non-array'")
             if isinstance(self.children[0], ArrayNode) and isinstance(
                 self.children[1], ArrayNode
             ):
                 # add clang style warning with pink color
-                warnings.append(f"array comparison always evaluates to false\n")
+                warnings.append("array comparison always evaluates to false\n")
                 return node, warnings
         return node
 
@@ -2468,27 +2455,27 @@ class FactorAST(AST):
             return self
         if isinstance(self.children[0], VarNode) and self.children[0].ptr:
             if self.root.value == "++":
-                raise RuntimeError(f"'Attempting to increment a pointer'")
-            elif self.root.value == "--":
-                raise RuntimeError(f"'Attempting to decrement a pointer'")
-            elif self.root.value == "-":
-                raise RuntimeError(f"'Attempting to negate a pointer'")
-            elif self.root.value == "+":
-                raise RuntimeError(f"'Invalid operation on pointer'")
+                raise RuntimeError("'Attempting to increment a pointer'")
+            if self.root.value == "--":
+                raise RuntimeError("'Attempting to decrement a pointer'")
+            if self.root.value == "-":
+                raise RuntimeError("'Attempting to negate a pointer'")
+            if self.root.value == "+":
+                raise RuntimeError("'Invalid operation on pointer'")
         if self.root.value == "-":
             self.children[0].value = -self.children[0].value
             return self.children[0]
-        elif self.root.value == "+":
+        if self.root.value == "+":
             return self.children[0]
-        elif self.root.value == "++":
+        if self.root.value == "++":
             if len(self.children) != 1:
                 raise RuntimeError(
-                    f"'Expected one variable for increment operation, got multiple'"
+                    "'Expected one variable for increment operation, got multiple'"
                 )
             if not isinstance(self.children[0], VarNode):
                 if not self.children[0].parent.array:
                     raise AttributeError(
-                        f"'Attempting to decrement a non-variable type object'"
+                        "'Attempting to decrement a non-variable type object'"
                     )
             node = self.children[0]
             if isinstance(node, VarNode):
@@ -2503,15 +2490,15 @@ class FactorAST(AST):
                     )
             node.value += 1
             return node
-        elif self.root.value == "--":
+        if self.root.value == "--":
             if len(self.children) != 1:
                 raise RuntimeError(
-                    f"'Expected one variable for increment operation, got multiple'"
+                    "'Expected one variable for increment operation, got multiple'"
                 )
             if not isinstance(self.children[0], VarNode):
                 if not self.children[0].parent.array:
                     raise AttributeError(
-                        f"'Attempting to decrement a non-variable type object'"
+                        "'Attempting to decrement a non-variable type object'"
                     )
             node = self.children[0]
             if isinstance(node, VarNode):
@@ -2537,7 +2524,7 @@ class PrimaryAST(AST):
             if isinstance(self.children[0], Node):
                 self.children[0].addr = True
             return self.children[0]
-        elif self.root.value[0] + self.root.value[-1] == "()":
+        if self.root.value[0] + self.root.value[-1] == "()":
             ret = self.children[0]
             cast = self.root.value[1:-1]
             ret.value = convert(ret.value, cast)
@@ -2567,11 +2554,11 @@ class DerefAST(AST):
             return match
         if not isinstance(child, VarNode):
             raise ReferenceError(
-                f"Attempting to dereference a non-variable type object"
+                "Attempting to dereference a non-variable type object"
             )
         if not child.ptr:
             raise AttributeError(
-                f"Attempting to dereference a non-pointer type variable"
+                "Attempting to dereference a non-pointer type variable"
             )
         if child.deref_level > child.total_deref:
             raise AttributeError(f"Dereference depth reached for pointer {child.key}")
@@ -2588,14 +2575,13 @@ class DerefAST(AST):
                 out = Node("char", "")
                 out.parent = self.children[0]
             return out
-        else:
-            child = child.value
-            child.deref = True
-            child.known = self.children[0].known
-            if not child.known:
-                new_node = Node("var", child.key)
-                new_node.parent = self.parent
-                child = new_node
+        child = child.value
+        child.deref = True
+        child.known = self.children[0].known
+        if not child.known:
+            new_node = Node("var", child.key)
+            new_node.parent = self.parent
+            child = new_node
         return child
 
     def mips(self, registers: Registers):
@@ -2655,9 +2641,9 @@ class ArrayElementAST(AST):
         if isinstance(self.root.value, str) or isinstance(self.root.value, Node):
             return self
         if not isinstance(self.root.value, int):
-            raise AttributeError(f"Array index must be an integer")
+            raise AttributeError("Array index must be an integer")
         if not isinstance(temp_symbol.object, ArrayNode):
-            raise AttributeError(f"Attempting to index a non-array type object")
+            raise AttributeError("Attempting to index a non-array type object")
         if self.root.value < 0 or self.root.value >= temp_symbol.size:
             raise AttributeError(
                 f"Array index {self.root.value} out of bounds for array {self.root.key}"
@@ -3267,7 +3253,7 @@ class FuncDeclAST(AST):
         )
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
-        out = f""
+        out = ""
         # Begin
         out += f"define dso_local {getLLVMType(self.type)} @{self.root.key}"
         # Parameters
@@ -3341,7 +3327,7 @@ class FuncDefnAST(AST):
         )
 
     def llvm(self, scope: bool = False, index: int = 1) -> tuple[str, int]:
-        out = f""
+        out = ""
         # Begin
         out += f"\ndefine dso_local {getLLVMType(self.type)} @{self.root.key}"
         # Parameters
@@ -3482,7 +3468,7 @@ class FuncCallAST(AST):
         arg_string = ""
         count = 0
         for arg in self.args:
-            arg_string += f"{getLLVMType(getType(arg.value) if isinstance(arg, Node) else arg.type)} {str(arg.value)}"
+            arg_string += f"{getLLVMType(getType(arg.value) if isinstance(arg, Node) else arg.type)} {arg.value!s}"
             if count + 1 != len(arg):
                 arg_string += ", "
         # end string
@@ -4105,11 +4091,11 @@ class ScanfAST(AST):
         for i in format_:
             if i.startswith("%"):
                 if i.endswith("d"):
-                    out_local += f"\tli $v0, 5\n"
+                    out_local += "\tli $v0, 5\n"
                 elif i.endswith("f"):
-                    out_local += f"\tli $v0, 6\n"
+                    out_local += "\tli $v0, 6\n"
                 elif i.endswith("c"):
-                    out_local += f"\tli $v0, 12\n"
+                    out_local += "\tli $v0, 12\n"
                 elif i.endswith("s"):
                     type_ = ""
                     if self.variables[counter].type == "int":
@@ -4128,12 +4114,12 @@ class ScanfAST(AST):
                     else:
                         format_string = registers.globalObjects.data[0][i]
                     out_local += f"\tla $a2, {format_string}\n"
-                    out_local += f"\tli $v0, 8\n"
+                    out_local += "\tli $v0, 8\n"
                 elif i.endswith("i"):
-                    out_local += f"\tli $v0, 5\n"
+                    out_local += "\tli $v0, 5\n"
                 else:
-                    out_local += f"\tli $v0, 5\n"
-                out_local += f"\tsyscall\n"
+                    out_local += "\tli $v0, 5\n"
+                out_local += "\tsyscall\n"
                 out_list.append("v0")
                 variable_register = self.variables[counter].register.name
                 if i.endswith("s"):
@@ -4175,10 +4161,8 @@ class ArrayDeclAST(AST):
         if len(self.children) > 0:
             if isinstance(self.children[0], ArrayNode):
                 return self.children[0].save()
-            else:
-                return super().save()
-        else:
             return super().save()
+        return super().save()
 
     def llvm_global(self, index: int = 1) -> tuple[str, int]:
         out = ""
@@ -4214,7 +4198,7 @@ class ArrayDeclAST(AST):
                 f"ptr align {4 if self.size < 4 else 16} "
                 f"@__const.{entry.symbol_table.owner}.{entry.name}, i64 {self.size * 4}, i1 false)"
             )
-            out += f"\n"
+            out += "\n"
             index += 1
 
         else:
@@ -4355,7 +4339,7 @@ class IncludeAST(AST):
 
     def llvm_global(self, index: int = 1) -> tuple[str, int]:
         return (
-            f"declare i32 @printf(ptr noundef, ...) #2\n\ndeclare i32 @__isoc99_scanf(ptr noundef, ...) #2\n\n",
+            "declare i32 @printf(ptr noundef, ...) #2\n\ndeclare i32 @__isoc99_scanf(ptr noundef, ...) #2\n\n",
             index,
         )
 
