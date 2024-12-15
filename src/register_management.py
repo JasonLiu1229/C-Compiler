@@ -1,7 +1,7 @@
 from .node import VarNode
 
 
-class Manager:  # Manager class for register management using LRU
+class Manager:
     """
     Manager class for register management using LRU
     Head is the least recently used register
@@ -34,16 +34,15 @@ class Manager:  # Manager class for register management using LRU
         """
         if self.head is None:
             return None
-        else:
-            register = self.head
-            self.head = self.head.next
-            self.head.prev = None
-            return register
+        register = self.head
+        self.head = self.head.next
+        self.head.prev = None
+        return register
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         return
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         return
 
     def search(self, in_object):
@@ -70,13 +69,13 @@ class Manager:  # Manager class for register management using LRU
         if in_reg == self.tail:
             return
         if in_reg is None or in_reg == self.head:
-            newHead = self.head.next
+            new_head = self.head.next
             self.tail.next = self.head
             self.head.prev = self.tail
             self.tail = self.head
             self.tail.next = None
-            newHead.prev = None
-            self.head = newHead
+            new_head.prev = None
+            self.head = new_head
         else:
             # replace a node in the middle of the chain by moving it to the tail
             if in_reg.prev is not None:
@@ -89,71 +88,71 @@ class Manager:  # Manager class for register management using LRU
             in_reg.next = None
 
     def shuffle_name(self, in_reg_name: str):
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == in_reg_name:
-                self.shuffle(tempHead)
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == in_reg_name:
+                self.shuffle(temp_head)
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
 
-    def findRegister(self, name):
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == name:
-                return tempHead
-            tempHead = tempHead.next
+    def get_register_by_name(self, name):
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == name:
+                return temp_head
+            temp_head = temp_head.next
         return None
 
 
-class returnManager(Manager):
+class ReturnManager(Manager):
     def __init__(self) -> None:
         super().__init__(2)
         self.head = Register(in_name="v0", in_manager=self)
         self.tail = Register(in_prev=self.head, in_name="v1", in_manager=self)
         self.head.next = self.tail
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         # check if the registers are in use
         # if v0 not in use, replace object of register v0 with in_object
         # if v1 not in use, replace object of register v1 with in_object
         if self.search(in_object) is not None:
             return
-        tempHead = self.head
+        temp_head = self.head
         free = False
-        while tempHead is not None:
-            if tempHead.used is False:
-                tempHead.update(in_object)
-                self.shuffle(tempHead)
+        while temp_head is not None:
+            if temp_head.used is False:
+                temp_head.update(in_object)
+                self.shuffle(temp_head)
                 free = True
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         if not free:
             self.head.clear()
             self.head.update(in_object)
             self.shuffle()
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         # delete the register with the name register_name and move the register to the tail
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == register_name:
-                tempHead.clear()
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == register_name:
+                temp_head.clear()
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         # move the tempHead to tail of the list
-        if tempHead is not None:
-            if tempHead.next is not None:
-                tempHead.next.prev = tempHead.prev
+        if temp_head is not None:
+            if temp_head.next is not None:
+                temp_head.next.prev = temp_head.prev
             else:
-                self.tail = tempHead.prev
-            if tempHead.prev is not None:
-                tempHead.prev.next = tempHead.next
+                self.tail = temp_head.prev
+            if temp_head.prev is not None:
+                temp_head.prev.next = temp_head.next
             else:
-                self.head = tempHead.next
-            self.tail.next = tempHead
-            tempHead.prev = self.tail
-            tempHead.next = None
-            self.tail = tempHead
+                self.head = temp_head.next
+            self.tail.next = temp_head
+            temp_head.prev = self.tail
+            temp_head.next = None
+            self.tail = temp_head
 
     def clear(self):
         self.head = Register(in_name="v0", in_manager=self)
@@ -161,7 +160,7 @@ class returnManager(Manager):
         self.head.next = self.tail
 
 
-class argumentManager(Manager):
+class ArgumentManager(Manager):
     def __init__(self) -> None:
         super().__init__(4)
         list_objects = [
@@ -173,7 +172,7 @@ class argumentManager(Manager):
             list_objects[i].next = list_objects[i + 1]
             list_objects[i + 1].prev = list_objects[i]
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         # check if the registers are in use
         # if a0 not in use, replace object of register a0 with in_object
         # if a1 not in use, replace object of register a1 with in_object
@@ -181,42 +180,42 @@ class argumentManager(Manager):
         # if a3 not in use, replace object of register a3 with in_object
         if self.search(in_object) is not None:
             return
-        tempHead = self.head
+        temp_head = self.head
         free = False
-        while tempHead is not None:
-            if tempHead.used is False:
-                tempHead.update(in_object)
-                self.shuffle(tempHead)
+        while temp_head is not None:
+            if temp_head.used is False:
+                temp_head.update(in_object)
+                self.shuffle(temp_head)
                 free = True
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         if not free:
             self.head.clear()
             self.head.update(in_object)
             self.shuffle()
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         # delete the register with the name register_name and move the register to the tail
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == register_name:
-                tempHead.clear()
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == register_name:
+                temp_head.clear()
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         # move the tempHead to tail of the list
-        if tempHead is not None:
-            if tempHead.next is not None:
-                tempHead.next.prev = tempHead.prev
+        if temp_head is not None:
+            if temp_head.next is not None:
+                temp_head.next.prev = temp_head.prev
             else:
-                self.tail = tempHead.prev
-            if tempHead.prev is not None:
-                tempHead.prev.next = tempHead.next
+                self.tail = temp_head.prev
+            if temp_head.prev is not None:
+                temp_head.prev.next = temp_head.next
             else:
-                self.head = tempHead.next
-            self.tail.next = tempHead
-            tempHead.prev = self.tail
-            tempHead.next = None
-            self.tail = tempHead
+                self.head = temp_head.next
+            self.tail.next = temp_head
+            temp_head.prev = self.tail
+            temp_head.next = None
+            self.tail = temp_head
 
     def clear(self):
         list_objects = [
@@ -229,7 +228,7 @@ class argumentManager(Manager):
             list_objects[i + 1].prev = list_objects[i]
 
 
-class temporaryManager(Manager):
+class TemporaryManager(Manager):
     def __init__(self) -> None:
         super().__init__(8)
         list_objects = [
@@ -242,47 +241,47 @@ class temporaryManager(Manager):
         for i in range(1, 8):
             list_objects[i].prev = list_objects[i - 1]
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         # check if the registers are in use
         if self.search(in_object) is not None:
             return
-        tempHead = self.head
+        temp_head = self.head
         free = False
-        while tempHead is not None:
-            if tempHead.used is False:
-                tempHead.update(in_object)
-                self.shuffle(tempHead)
+        while temp_head is not None:
+            if temp_head.used is False:
+                temp_head.update(in_object)
+                self.shuffle(temp_head)
                 free = True
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         if not free:
             self.head.clear()
             self.head.update(in_object)
             self.shuffle()
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         # delete the register with the name register_name and move the register to the tail
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == register_name:
-                tempHead.clear()
-                self.shuffle(tempHead)
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == register_name:
+                temp_head.clear()
+                self.shuffle(temp_head)
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         # move the tempHead to tail of the list
-        if tempHead is not None:
-            if tempHead.next is not None:
-                tempHead.next.prev = tempHead.prev
+        if temp_head is not None:
+            if temp_head.next is not None:
+                temp_head.next.prev = temp_head.prev
             else:
-                self.tail = tempHead.prev
-            if tempHead.prev is not None:
-                tempHead.prev.next = tempHead.next
+                self.tail = temp_head.prev
+            if temp_head.prev is not None:
+                temp_head.prev.next = temp_head.next
             else:
-                self.head = tempHead.next
-            self.tail.next = tempHead
-            tempHead.prev = self.tail
-            tempHead.next = None
-            self.tail = tempHead
+                self.head = temp_head.next
+            self.tail.next = temp_head
+            temp_head.prev = self.tail
+            temp_head.next = None
+            self.tail = temp_head
 
     def clear(self):
         list_objects = [
@@ -296,7 +295,7 @@ class temporaryManager(Manager):
             list_objects[i].prev = list_objects[i - 1]
 
 
-class savedManager(Manager):
+class SavedManager(Manager):
     def __init__(self) -> None:
         super().__init__(8)
         list_objects = [
@@ -309,46 +308,46 @@ class savedManager(Manager):
         for i in range(1, 8):
             list_objects[i].prev = list_objects[i - 1]
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         # check if the registers are in use
         if self.search(in_object) is not None:
             return
-        tempHead = self.head
+        temp_head = self.head
         free = False
-        while tempHead is not None:
-            if tempHead.used is False:
-                tempHead.update(in_object)
-                self.shuffle(tempHead)
+        while temp_head is not None:
+            if temp_head.used is False:
+                temp_head.update(in_object)
+                self.shuffle(temp_head)
                 free = True
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         if not free:
             self.head.clear()
             self.head.update(in_object)
             self.shuffle()
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         # delete the register with the name register_name and move the register to the tail
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == register_name:
-                tempHead.clear()
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == register_name:
+                temp_head.clear()
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         # move the tempHead to tail of the list
-        if tempHead is not None:
-            if tempHead.next is not None:
-                tempHead.next.prev = tempHead.prev
+        if temp_head is not None:
+            if temp_head.next is not None:
+                temp_head.next.prev = temp_head.prev
             else:
-                self.tail = tempHead.prev
-            if tempHead.prev is not None:
-                tempHead.prev.next = tempHead.next
+                self.tail = temp_head.prev
+            if temp_head.prev is not None:
+                temp_head.prev.next = temp_head.next
             else:
-                self.head = tempHead.next
-            self.tail.next = tempHead
-            tempHead.prev = self.tail
-            tempHead.next = None
-            self.tail = tempHead
+                self.head = temp_head.next
+            self.tail.next = temp_head
+            temp_head.prev = self.tail
+            temp_head.next = None
+            self.tail = temp_head
 
     def clear(self):
         list_objects = [
@@ -362,55 +361,55 @@ class savedManager(Manager):
             list_objects[i].prev = list_objects[i - 1]
 
 
-class reservedManager(Manager):
+class ReservedManager(Manager):
     def __init__(self) -> None:
         super().__init__(4)
         self.head = Register(in_name="k0", in_manager=self)
         self.tail = Register(in_prev=self.head, in_name="k1", in_manager=self)
         self.head.next = self.tail
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         # check if the registers are in use
         # if k0 not in use, replace object of register k0 with in_object
         # if k1 not in use, replace object of register k1 with in_object
         if self.search(in_object) is not None:
             return
-        tempHead = self.head
+        temp_head = self.head
         free = False
-        while tempHead is not None:
-            if tempHead.used is False:
-                tempHead.update(in_object)
-                self.shuffle(tempHead)
+        while temp_head is not None:
+            if temp_head.used is False:
+                temp_head.update(in_object)
+                self.shuffle(temp_head)
                 free = True
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         if not free:
             self.head.clear()
             self.head.update(in_object)
             self.shuffle()
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         # delete the register with the name register_name and move the register to the tail
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == register_name:
-                tempHead.clear()
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == register_name:
+                temp_head.clear()
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         # move the tempHead to tail of the list
-        if tempHead is not None:
-            if tempHead.next is not None:
-                tempHead.next.prev = tempHead.prev
+        if temp_head is not None:
+            if temp_head.next is not None:
+                temp_head.next.prev = temp_head.prev
             else:
-                self.tail = tempHead.prev
-            if tempHead.prev is not None:
-                tempHead.prev.next = tempHead.next
+                self.tail = temp_head.prev
+            if temp_head.prev is not None:
+                temp_head.prev.next = temp_head.next
             else:
-                self.head = tempHead.next
-            self.tail.next = tempHead
-            tempHead.prev = self.tail
-            tempHead.next = None
-            self.tail = tempHead
+                self.head = temp_head.next
+            self.tail.next = temp_head
+            temp_head.prev = self.tail
+            temp_head.next = None
+            self.tail = temp_head
 
     def clear(self):
         self.head = Register(in_name="k0")
@@ -418,7 +417,7 @@ class reservedManager(Manager):
         self.head.next = self.tail
 
 
-class floatManager(Manager):
+class FloatManager(Manager):
     def __init__(self) -> None:
         super().__init__(32)
         list_objects = [
@@ -431,46 +430,46 @@ class floatManager(Manager):
         for i in range(1, 32):
             list_objects[i].prev = list_objects[i - 1]
 
-    def LRU(self, in_object):
+    def lru(self, in_object):
         # check if the registers are in use
         if self.search(in_object) is not None:
             return
-        tempHead = self.head
+        temp_head = self.head
         free = False
-        while tempHead is not None:
-            if tempHead.used is False:
-                tempHead.update(in_object)
-                self.shuffle(tempHead)
+        while temp_head is not None:
+            if temp_head.used is False:
+                temp_head.update(in_object)
+                self.shuffle(temp_head)
                 free = True
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         if not free:
             self.head.clear()
             self.head.update(in_object)
             self.shuffle()
 
-    def LRU_delete(self, register_name: str):
+    def lru_delete(self, register_name: str):
         # delete the register with the name register_name and move the register to the tail
-        tempHead = self.head
-        while tempHead is not None:
-            if tempHead.name == register_name:
-                tempHead.clear()
+        temp_head = self.head
+        while temp_head is not None:
+            if temp_head.name == register_name:
+                temp_head.clear()
                 break
-            tempHead = tempHead.next
+            temp_head = temp_head.next
         # move the tempHead to tail of the list
-        if tempHead is not None:
-            if tempHead.next is not None:
-                tempHead.next.prev = tempHead.prev
+        if temp_head is not None:
+            if temp_head.next is not None:
+                temp_head.next.prev = temp_head.prev
             else:
-                self.tail = tempHead.prev
-            if tempHead.prev is not None:
-                tempHead.prev.next = tempHead.next
+                self.tail = temp_head.prev
+            if temp_head.prev is not None:
+                temp_head.prev.next = temp_head.next
             else:
-                self.head = tempHead.next
-            self.tail.next = tempHead
-            tempHead.prev = self.tail
-            tempHead.next = None
-            self.tail = tempHead
+                self.head = temp_head.next
+            self.tail.next = temp_head
+            temp_head.prev = self.tail
+            temp_head.next = None
+            self.tail = temp_head
 
     def clear(self):
         list_objects = [
@@ -484,7 +483,7 @@ class floatManager(Manager):
             list_objects[i].prev = list_objects[i - 1]
 
 
-class singleManager:
+class SingleManager:
     def __init__(self) -> None:
         self.gp = Register(in_name="gp")
         self.sp = Register(in_name="sp")
@@ -505,54 +504,47 @@ class singleManager:
         self.lo = Register(in_name="lo")
         self.hi = Register(in_name="hi")
 
-    def findRegister(self, name):
+    def get_register_by_name(self, name):
         if name == "gp":
             return self.gp
-        elif name == "sp":
+        if name == "sp":
             return self.sp
-        elif name == "fp":
+        if name == "fp":
             return self.fp
-        elif name == "ra":
+        if name == "ra":
             return self.ra
-        elif name == "zero":
+        if name == "zero":
             return self.zero
-        elif name == "at":
+        if name == "at":
             return self.at
-        elif name == "lo":
+        if name == "lo":
             return self.lo
-        elif name == "hi":
+        if name == "hi":
             return self.hi
-        else:
-            return None
+        return None
 
 
-class dataManager:
+class DataManager:
     def __init__(self) -> None:
-        self.data: [] = [
-            {},
-            {},
-            {},
-            {},
-            {},
-            {},
-        ]  # ASCII, float, word, half-word, byte, space
-        self.uninitialized: [] = [[], [], [], []]  # char, float, word, array
+        self.data: list = [{}, {}, {}, {}, {}, {}]
+        # ASCII, float, word, half-word, byte, space
+        self.uninitialized: list = [[], [], [], []]  # char, float, word, array
         self.index = 0
         self.stackSize = 0
 
 
 class Registers:
     def __init__(self) -> None:
-        self.returnManager = returnManager()
-        self.argumentManager = argumentManager()
-        self.temporaryManager = temporaryManager()
-        self.savedManager = savedManager()
-        self.reservedManager = reservedManager()
-        self.floatManager = floatManager()
-        self.singleManager = singleManager()
-        self.globalObjects: dataManager = dataManager()
+        self.returnManager = ReturnManager()
+        self.argumentManager = ArgumentManager()
+        self.temporaryManager = TemporaryManager()
+        self.savedManager = SavedManager()
+        self.reservedManager = ReservedManager()
+        self.floatManager = FloatManager()
+        self.singleManager = SingleManager()
+        self.globalObjects: DataManager = DataManager()
 
-    def clearAll(self):
+    def clear(self):
         self.returnManager.clear()
         self.argumentManager.clear()
         self.temporaryManager.clear()
@@ -588,21 +580,20 @@ class Registers:
             return temp.name
         return None
 
-    def searchRegister(self, name):
+    def get_register_by_name(self, name):
         if name.startswith("f"):
-            return self.floatManager.findRegister(name)
-        elif name.startswith("t"):
-            return self.temporaryManager.findRegister(name)
-        elif name.startswith("a"):
-            return self.argumentManager.findRegister(name)
-        elif name.startswith("s"):
-            return self.savedManager.findRegister(name)
-        elif name.startswith("k"):
-            return self.reservedManager.findRegister(name)
-        elif name.startswith("v"):
-            return self.returnManager.findRegister(name)
-        else:
-            return self.singleManager.findRegister(name)
+            return self.floatManager.get_register_by_name(name)
+        if name.startswith("t"):
+            return self.temporaryManager.get_register_by_name(name)
+        if name.startswith("a"):
+            return self.argumentManager.get_register_by_name(name)
+        if name.startswith("s"):
+            return self.savedManager.get_register_by_name(name)
+        if name.startswith("k"):
+            return self.reservedManager.get_register_by_name(name)
+        if name.startswith("v"):
+            return self.returnManager.get_register_by_name(name)
+        return self.singleManager.get_register_by_name(name)
 
     def shuffle_name(self, register_name: str):
         if register_name.startswith("f"):
@@ -635,7 +626,7 @@ class Register:
         self.object = in_object
         self.register = in_register
         self.manager = in_manager
-        self.used = False if self.object is None else True
+        self.used = self.object is not None
 
     def update(self, in_object):
         self.object = in_object

@@ -52,8 +52,7 @@ class Node:
             if isinstance(other.value, str):
                 other.value = ord(other.value)
             return Node("int", floor(self.value / other.value))
-        else:
-            raise ZeroDivisionError
+        raise ZeroDivisionError
 
     def __truediv__(self, other):
         if other.value != 0:
@@ -65,15 +64,14 @@ class Node:
                 f"{'float' if not (isinstance(self.value, int) or isinstance(other.value, int)) else 'int'}",
                 self.value / other.value,
             )
-        else:
-            raise ZeroDivisionError
+        raise ZeroDivisionError
 
     def __add__(self, other):
         if isinstance(self.value, str):
             self.value = ord(self.value)
         if isinstance(other.value, str):
             other.value = ord(other.value)
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, int | float):
             return Node("", self.value + other)
         return Node("", self.value + other.value)
 
@@ -82,7 +80,7 @@ class Node:
             self.value = ord(self.value)
         if isinstance(other.value, str):
             other.value = ord(other.value)
-        if isinstance(other, int) or isinstance(other, float):
+        if isinstance(other, int | float):
             return Node("", self.value - other)
         return Node("", self.value - other.value)
 
@@ -123,8 +121,7 @@ class Node:
         #     other.value = ord(other.value)
         if not isinstance(self, VarNode) and not isinstance(other, VarNode):
             return self.value == other.value and self.key == other.key
-        else:
-            return self.value == other.value
+        return self.value == other.value
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -155,8 +152,7 @@ class Node:
             return {out_key: self.value}
         if isinstance(self.value, VarNode):
             return {self.key: self.value.save()}
-        out = {self.key: self.value}
-        return out
+        return {self.key: self.value}
 
     def get_str(self):
         """
@@ -170,8 +166,7 @@ class Node:
         converts Node in a dot dictionary format
         :return: dot dictionary format
         """
-        out = f"\"{self.key}\" [label=\"{self.key}{ ' :' + self.value if self.value is not None else ''}\"];\n"
-        return out
+        return f"\"{self.key}\" [label=\"{self.key}{ ' :' + self.value if self.value is not None else ''}\"];\n"
 
     def recursive_dot(self, dictionary, count, name):
         """
@@ -203,7 +198,7 @@ class Node:
         registers.search(self)
         if self.register is None:
             # load the value in a register
-            registers.temporaryManager.LRU(self)
+            registers.temporaryManager.lru(self)
         if self.key == "var":
             # variable is declared in the data section
             if self.type == "int":
@@ -222,7 +217,7 @@ class Node:
             out_local += f"\t\t# {self.get_str()}\n"
         if isinstance(self.parent, ArrayNode):
             temp_node = Node("", None)
-            registers.temporaryManager.LRU(temp_node)
+            registers.temporaryManager.lru(temp_node)
             out_local += f"\tla ${temp_node.register.name}, {self.parent.type}_{self.parent.key}\n"
             out_local += f"\taddi ${temp_node.register.name}, ${temp_node.register.name}, {self.parent.values.index(self) * 4}\n"
             out_local += f"\tsw ${self.register.name}, 0(${temp_node.register.name})\n"
@@ -244,7 +239,7 @@ class VarNode(Node):
         key: str,
         value,
         vtype: str,
-        const: bool = None,
+        const: bool = False,
         ptr: bool = False,
         deref_level: int = 0,
         total_deref: int = 0,
@@ -264,8 +259,7 @@ class VarNode(Node):
         self.array = is_array
 
     def __repr__(self) -> str:
-        rep = f"{self.type} {'*' * (self.total_deref - self.deref_level - 1)} {self.key} : {self.value}"
-        return rep
+        return f"{self.type} {'*' * (self.total_deref - self.deref_level - 1)} {self.key} : {self.value}"
 
     def __eq__(self, o):
         if not isinstance(o, VarNode):
@@ -278,13 +272,6 @@ class VarNode(Node):
 
     def __ne__(self, o):
         return not self.__eq__(o)
-
-    def print(self):
-        """
-        print function for VarNode
-        :return:
-        """
-        return self.get_str()
 
     def save(self):
         """
@@ -350,10 +337,7 @@ class VarNode(Node):
             elif self.type == "char":
                 self.value = ord("\0")
         # Scope and constant
-        if scope and not self.const:
-            out = f"%{index} = "
-        else:
-            out = f"@{index} = "
+        out = f"%{index} = " if scope and not self.const else f"@{index} = "
 
         if self.const:
             out += "constant "
@@ -417,27 +401,26 @@ class VarNode(Node):
         return out, index + 1
 
     def mips(self, registers):
-        if self.ptr and isinstance(self.value, VarNode):
-            if self.value.register is None:
-                if self.value.const:
-                    registers.savedManager.LRU(self.value)
-                elif self.value.type == "float":
-                    registers.floatManager.LRU(self.value)
-                else:
-                    registers.temporaryManager.LRU(self.value)
+        if self.ptr and isinstance(self.value, VarNode) and self.value.register is None:
+            if self.value.const:
+                registers.savedManager.lru(self.value)
+            elif self.value.type == "float":
+                registers.floatManager.lru(self.value)
+            else:
+                registers.temporaryManager.lru(self.value)
         # assign itself to a register
         # search for a register first
         if self.register is None:
             if registers.search(self) is not None:
                 pass
             elif self.const:
-                registers.savedManager.LRU(self)
+                registers.savedManager.lru(self)
                 # registers.globalObjects.data[0][self.value] = self.key
             elif self.type == "float":
-                registers.floatManager.LRU(self)
+                registers.floatManager.lru(self)
                 # registers.globalObjects.data[1][self.value] = self.key
             else:
-                registers.temporaryManager.LRU(self)
+                registers.temporaryManager.lru(self)
         if self.value is None:
             return "", "", []
         # mips variable declaration
@@ -453,10 +436,7 @@ class VarNode(Node):
             out_type = ".word"
 
         # get right value
-        if isinstance(self.value, str):
-            out_val = f"'{self.value}'"
-        else:
-            out_val = f"{self.value}"
+        out_val = f"'{self.value}'" if isinstance(self.value, str) else f"{self.value}"
 
         # if self.const or self.type == "float":
         #     out_global = f"{self.key}: {out_type} {out_val}\n"
@@ -507,7 +487,7 @@ class ArrayNode(VarNode):
         key: str,
         value,
         vtype: str,
-        const: bool = None,
+        const: bool = False,
         ptr: bool = False,
         deref_level: int = 0,
         total_deref: int = 0,
@@ -521,7 +501,7 @@ class ArrayNode(VarNode):
         )
         if in_values is None:
             in_values = []
-        self.values: [VarNode | Node] = []
+        self.values: list[VarNode | Node] = []
         self.size = in_size
 
     def __repr__(self) -> str:
@@ -537,8 +517,7 @@ class ArrayNode(VarNode):
             f"{'const ' if self.const else ''}{self.type}{'*' * (self.total_deref - self.deref_level)}"
             f" {self.key}[{self.size if self.size > 0 else ''}]"
         )
-        out = {out_key: [value.save() for value in self.values]}
-        return out
+        return {out_key: [value.save() for value in self.values]}
 
     def get_str(self):
         # for example: out_key = "int*[5] a"
@@ -567,7 +546,7 @@ class FuncParameter(VarNode):
         key: str,
         value,
         vtype: str,
-        const: bool = None,
+        const: bool = False,
         ptr: bool = False,
         deref_level: int = 0,
         total_deref: int = 0,
@@ -619,7 +598,9 @@ class FuncParameter(VarNode):
 
 
 class FunctionNode(Node):
-    def __init__(self, key: str, ret_type: str = None, in_const: bool = False) -> None:
+    def __init__(
+        self, key: str, ret_type: str | None = None, in_const: bool = False
+    ) -> None:
         """
         Initializer
         """
@@ -645,8 +626,7 @@ class FunctionNode(Node):
         values = []
         for key, val in self.value.items():
             values.append(str(key) + "=" + str(val.value))
-        out = {self.key: values}
-        return out
+        return {self.key: values}
 
     def save_dot(self):
         """
@@ -658,8 +638,7 @@ class FunctionNode(Node):
         values = []
         for key, val in self.value.items():
             values.append(str(key) + "=" + str(val.value))
-        out = {self.key: values}
-        return out
+        return {self.key: values}
 
     def get_str(self):
         """

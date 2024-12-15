@@ -295,7 +295,7 @@ class LLVM:
         """
         return f"store {var_type} {value}, {var_type}* {ptr}"
 
-    def functionNodeConvert(
+    def function_node_convert(
         self,
         func: FunctionNode,
         declr: bool = False,
@@ -360,26 +360,24 @@ class LLVM:
                     ll_out += std_decl + " align 1\n\n"
                 f.write(ll_out)
                 return index_global
-        if defn:
-            if func.body is not None:
-                pass
-        else:
-            # Get function parameters
-            print_val = func.value
-            if isinstance(print_val, float):
-                print_val = array("f", [print_val])[0]
-                ret = self.printf_float(print_val, index_local)
-                ll_out += ret[0]
-                index_local = ret[1]
-            elif isinstance(print_val, int):
-                ret = self.printf_int(print_val, index_local)
-                ll_out += ret[0]
-                index_local = ret[1]
-            elif isinstance(print_val, str):
-                ret = self.printf_char(print_val, index_local)
-                ll_out += ret[0]
-                index_local = ret[1]
-            return ll_out, index_local
+        if defn and func.body is not None:
+            return None
+        # Get function parameters
+        print_val = func.value
+        if isinstance(print_val, float):
+            print_val = array("f", [print_val])[0]
+            ret = self.printf_float(print_val, index_local)
+            ll_out += ret[0]
+            index_local = ret[1]
+        elif isinstance(print_val, int):
+            ret = self.printf_int(print_val, index_local)
+            ll_out += ret[0]
+            index_local = ret[1]
+        elif isinstance(print_val, str):
+            ret = self.printf_char(print_val, index_local)
+            ll_out += ret[0]
+            index_local = ret[1]
+        return ll_out, index_local
 
     def ast_convert(self):
         """
@@ -416,7 +414,7 @@ class LLVM:
         """
         pass
 
-    def convertNode(
+    def convert_node(
         self, input_node: Node, global_scope: bool = False, index: int = 1
     ) -> int:
         """
@@ -430,13 +428,13 @@ class LLVM:
                 node.value = input_node.children[0].value
                 if len(self.index_queue) == 0:
                     self.index_queue.append(index)
-                ret = self.functionNodeConvert(node, index_local=index)
+                ret = self.function_node_convert(node, index_local=index)
                 f.write(ret[0])
                 index = ret[1]
             if isinstance(input_node, FunctionNode):
                 if len(self.index_queue) == 0:
                     self.index_queue.append(index)
-                ret = self.functionNodeConvert(input_node, index_local=index)
+                ret = self.function_node_convert(input_node, index_local=index)
                 f.write(ret[0])
                 # self.index_queue.insert(0, ret[1])
                 index = ret[1]
@@ -446,8 +444,6 @@ class LLVM:
         """
         Converts the AST given in the constructor to LLVM code and writes the code to file
         """
-        # clear file
-        f = open(self.file_name, "w")
         # indexes = {"printf": 1}
         # get all the nodes via DFS
         # DFS the condition
@@ -458,13 +454,14 @@ class LLVM:
             if temp not in visited:
                 # if a scope, skip
                 # if include instruction, skip
-                if (
-                    isinstance(temp, FuncDeclAST)
-                    or isinstance(temp, FuncDefnAST)
-                    or isinstance(temp, PrintfAST)
-                    or isinstance(temp, ScanfAST)
-                    or isinstance(temp, ArrayDeclAST)
-                    or isinstance(temp, IncludeAST)
+                if isinstance(
+                    temp,
+                    FuncDeclAST
+                    | FuncDefnAST
+                    | PrintfAST
+                    | ScanfAST
+                    | ArrayDeclAST
+                    | IncludeAST,
                 ):
                     visited.append(temp)
                 if isinstance(temp, AST):
@@ -475,11 +472,7 @@ class LLVM:
         string_local = ""
         index = 1
         for instruction in visited:
-            if (
-                isinstance(instruction, PrintfAST)
-                or isinstance(instruction, ScanfAST)
-                or isinstance(instruction, IncludeAST)
-            ):
+            if isinstance(instruction, PrintfAST | ScanfAST | IncludeAST):
                 temp_global, index = instruction.llvm_global(index)
             else:
                 temp_global, index = instruction.llvm(False, index)
@@ -487,48 +480,14 @@ class LLVM:
                 # temp_local, index = instruction.llvm(True, index)
                 # string_local += temp_local
             string_global += temp_global
-        f.write(string_global)
-        f.write(string_local)
-        print("Done!!!")
-        # for entry in self.symbol_table.table:
-        #     node = copy.copy(entry.object)
-        #     if isinstance(entry, FuncSymbolEntry):
-        #         node.key = entry.name
-        #         if entry.name == "printf":
-        #             i = indexes["printf"]
-        #             defn = True
-        #             declr = (i == 1)
-        #             self.index_queue.append(i)
-        #             i = self.functionNodeConvert(entry.object, declr=declr, defn=defn, glob_decl=True,
-        #                                          index_global=i) + 1
-        #             indexes["printf"] = i
-        #     if isinstance(node, VarNode):
-        #         self.var_node_convert(node, True)
-        #     # elif isinstance(node, list):
-        #     #     i = 1
-        #     #     defn = True
-        #     #     declr = True
-        #     #     for val in node:
-        #     #         if isinstance(entry, FunctionNode):
-        #     #             self.index_queue.append(i)
-        #     #             i = self.functionNodeConvert(entry, declr=declr, defn=defn, glob_decl=True, index_global=i) + 1
-        #     #             defn = False
-        #     #             declr = False
-        # # begin of the main function
-        # with open(self.file_name, 'a') as f:
-        #     f.write("define dso_local i32 @main () {\n")
-        #
-        # self.ast_convert()
-        # i = 1
-        # for node in self.nodes:
-        #     i = self.convertNode(node, False, index=i)
-        #
-        # # end of main
-        # with open(self.file_name, 'a') as f:
-        #     f.write("\tret i32 0\n}")
+        with open(self.file_name, "w") as f:
+            f.write(string_global)
+            f.write(string_local)
 
-    def execute(self):
+    def execute(self) -> subprocess.CompletedProcess[str]:
         """
         Runs the generated llvm file
         """
-        subprocess.run(["lli", "-opaque-pointers", self.file_name])
+        return subprocess.run(
+            ["lli", "-opaque-pointers", self.file_name], capture_output=True, text=True
+        )

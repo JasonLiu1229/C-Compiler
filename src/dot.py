@@ -50,18 +50,17 @@ class Dot:
                         # print(current)
                         # print(self.dot)
                         exit(1)
-        indexes = {"printf": 0, "scanf": 0}
         # write as dot file
         with open(self.filename, "w") as f:
             f.write("graph {\n")
             for key, value in self.dot.items():
                 value = value[0]
                 # declare node using save_dot() method
-                if isinstance(key, FuncDeclAST) or isinstance(key, FuncDefnAST):
+                if isinstance(key, FuncDeclAST | FuncDefnAST):
                     f.write(key.save_dot())
                 else:
                     f.write(key.root.save_dot())
-                if isinstance(value, FuncDeclAST) or isinstance(value, FuncDefnAST):
+                if isinstance(value, FuncDeclAST | FuncDefnAST):
                     f.write(f' "{value.root.key}" [shape=box]\n')
                 else:
                     f.write(value.root.save_dot())
