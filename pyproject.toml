@@ -38,7 +38,17 @@ indent-width = 4
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["RUF", "E", "F", "UP", "B", "SIM", "I", "N", "RET"]
+select = [
+  "RUF", 
+  "E", 
+  "F", 
+  "UP", 
+  "B", 
+  "SIM", 
+  "I", 
+  "N", 
+  "RET"
+]
 ignore = ["E501"]
 
 [tool.pyright]

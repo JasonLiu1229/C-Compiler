@@ -14,9 +14,9 @@ from .node import FunctionNode, Node
 
 
 class LLVM:
-
-    def __init__(self, input_ast: AST | None = None,
-                 file_name: str = "../Output/Output.ll") -> None:
+    def __init__(
+        self, input_ast: AST | None = None, file_name: str = "../Output/Output.ll"
+    ) -> None:
         """
 
         :param input_ast: the AST to be converted
@@ -35,12 +35,21 @@ class LLVM:
         :param index: the current local index
         """
         out = ""
-        out += '\t%' + str(index) + "= alloca i32, align 4 \n"
+        out += "\t%" + str(index) + "= alloca i32, align 4 \n"
         out += "\tstore i32 " + str(value) + ", ptr %" + str(index) + ", align 4 \n"
-        out += '\t%' + str(index + 1) + "= load i32, ptr %" + str(index) + ", align 4 \n"
+        out += (
+            "\t%" + str(index + 1) + "= load i32, ptr %" + str(index) + ", align 4 \n"
+        )
         index += 1
-        out += '\t%' + str(index + 1) + "= call i32 (ptr, ...) @printf(ptr noundef @.str" + str(self.index_queue[0]) + \
-               ", i32 noundef %" + str(index) + ')\n'
+        out += (
+            "\t%"
+            + str(index + 1)
+            + "= call i32 (ptr, ...) @printf(ptr noundef @.str"
+            + str(self.index_queue[0])
+            + ", i32 noundef %"
+            + str(index)
+            + ")\n"
+        )
         index += 2
         self.index_queue.remove(self.index_queue[0])
         return out, index
@@ -57,12 +66,23 @@ class LLVM:
         # store the float value
         ll_out += "\tstore float " + str(val) + ", ptr %" + str(index) + ", align 4\n"
         index += 1
-        ll_out += "\t%" + str(index) + " = load float, ptr %" + str(index - 1) + ", align 4\n"
+        ll_out += (
+            "\t%" + str(index) + " = load float, ptr %" + str(index - 1) + ", align 4\n"
+        )
         index += 1
-        ll_out += "\t%" + str(index) + " = fpext float %" + str(index - 1) + " to double\n"
+        ll_out += (
+            "\t%" + str(index) + " = fpext float %" + str(index - 1) + " to double\n"
+        )
         index += 1
-        ll_out += "\t%" + str(index) + " = call i32 (ptr, ...) @printf(ptr noundef @.str" + \
-                  str(self.index_queue[0]) + ", double noundef %" + str(index - 1) + ")\n"
+        ll_out += (
+            "\t%"
+            + str(index)
+            + " = call i32 (ptr, ...) @printf(ptr noundef @.str"
+            + str(self.index_queue[0])
+            + ", double noundef %"
+            + str(index - 1)
+            + ")\n"
+        )
         index += 1
         self.index_queue.remove(self.index_queue[0])
         return ll_out, index
@@ -79,13 +99,21 @@ class LLVM:
         # store the float value
         ll_out += "\tstore i8 " + str(ord(val)) + ", ptr %" + str(index) + ", align 1\n"
         index += 1
-        ll_out += "\t%" + str(index) + " = load i8, ptr %" + str(index - 1) + ", align 1\n"
+        ll_out += (
+            "\t%" + str(index) + " = load i8, ptr %" + str(index - 1) + ", align 1\n"
+        )
         index += 1
         ll_out += "\t%" + str(index) + " = sext i8 %" + str(index - 1) + " to i32\n"
         index += 1
-        ll_out += "\t%" + str(index) + " = call i32 (ptr, ...) @printf(ptr noundef @.str" + str(
-            self.index_queue[0]) + ", i32 noundef %" \
-                  + str(index - 1) + ")\n"
+        ll_out += (
+            "\t%"
+            + str(index)
+            + " = call i32 (ptr, ...) @printf(ptr noundef @.str"
+            + str(self.index_queue[0])
+            + ", i32 noundef %"
+            + str(index - 1)
+            + ")\n"
+        )
         index += 1
         self.index_queue.remove(self.index_queue[0])
         return ll_out, index
@@ -176,7 +204,7 @@ class LLVM:
         :param op1: the first operand
         :param op2: the second operand
         """
-        return f'icmp sgt {var_type} {op1}, {op2}'
+        return f"icmp sgt {var_type} {op1}, {op2}"
 
     @staticmethod
     def comp_lt(var_type: str, op1: str, op2: str):
@@ -186,7 +214,7 @@ class LLVM:
         :param op1: the first operand
         :param op2: the second operand
         """
-        return f'icmp slt {var_type} {op1}, {op2}'
+        return f"icmp slt {var_type} {op1}, {op2}"
 
     @staticmethod
     def comp_eq(var_type: str, op1: str, op2: str):
@@ -196,7 +224,7 @@ class LLVM:
         :param op1: the first operand
         :param op2: the second operand
         """
-        return f'icmp eq {var_type} {op1}, {op2}'
+        return f"icmp eq {var_type} {op1}, {op2}"
 
     @staticmethod
     def comp_geq(var_type: str, op1: str, op2: str):
@@ -206,7 +234,7 @@ class LLVM:
         :param op1: the first operand
         :param op2: the second operand
         """
-        return f'icmp sge {var_type} {op1}, {op2}'
+        return f"icmp sge {var_type} {op1}, {op2}"
 
     @staticmethod
     def comp_leq(var_type: str, op1: str, op2: str):
@@ -216,7 +244,7 @@ class LLVM:
         :param op1: the first operand
         :param op2: the second operand
         """
-        return f'icmp sle {var_type} {op1}, {op2}'
+        return f"icmp sle {var_type} {op1}, {op2}"
 
     @staticmethod
     def comp_neq(var_type: str, op1: str, op2: str):
@@ -226,7 +254,7 @@ class LLVM:
         :param op1: the first operand
         :param op2: the second operand
         """
-        return f'icmp ne {var_type} {op1}, {op2}'
+        return f"icmp ne {var_type} {op1}, {op2}"
 
     @staticmethod
     def and_op(var_type: str, op1: str, op2: str):
@@ -267,8 +295,15 @@ class LLVM:
         """
         return f"store {var_type} {value}, {var_type}* {ptr}"
 
-    def functionNodeConvert(self, func: FunctionNode, declr: bool = False, defn: bool = False,
-                            glob_decl: bool = False, index_local: int = 1, index_global: int = 1):
+    def function_node_convert(
+        self,
+        func: FunctionNode,
+        declr: bool = False,
+        defn: bool = False,
+        glob_decl: bool = False,
+        index_local: int = 1,
+        index_global: int = 1,
+    ):
         """
         Writes LLVM code for function nodes according to the three parameters
         :param func: the function node
@@ -285,19 +320,23 @@ class LLVM:
         ll_out = ""
         # Write the llvm code
         if declr:
-            with open(self.file_name, 'a') as f:
+            with open(self.file_name, "a") as f:
                 if func.key == "printf":
                     f.write("declare i32 @printf(ptr noundef, ...)\n\n")
         if glob_decl:
-            with open(self.file_name, 'a') as f:
+            with open(self.file_name, "a") as f:
                 # Check the function name
                 if func.key == "printf":
                     # # Get the function parameters
                     # print_val = func.value["par0"]
                     # Define our string
-                    std_decl = "@.str" + str(index_global) + " = private unnamed_addr constant ["
-                    std_decl += '4'
-                    std_decl += " x i8] c" + "\""
+                    std_decl = (
+                        "@.str"
+                        + str(index_global)
+                        + " = private unnamed_addr constant ["
+                    )
+                    std_decl += "4"
+                    std_decl += " x i8] c" + '"'
                     # if isinstance(print_val, VarNode):
                     #     if print_val.type == "int":
                     #         std_decl += "%d\\0A\\00\""
@@ -313,34 +352,32 @@ class LLVM:
                     #     elif print_val.type == "char":
                     #         std_decl += "%c\\0A\\00\""
                     if func.type == "int":
-                        std_decl += "%d\\0A\\00\""
+                        std_decl += '%d\\0A\\00"'
                     elif func.type == "float":
-                        std_decl += "%f\\0A\\00\""
+                        std_decl += '%f\\0A\\00"'
                     elif func.type == "char":
-                        std_decl += "%c\\0A\\00\""
+                        std_decl += '%c\\0A\\00"'
                     ll_out += std_decl + " align 1\n\n"
                 f.write(ll_out)
                 return index_global
-        if defn:
-            if func.body is not None:
-                pass
-        else:
-            # Get function parameters
-            print_val = func.value
-            if isinstance(print_val, float):
-                print_val = array("f", [print_val])[0]
-                ret = self.printf_float(print_val, index_local)
-                ll_out += ret[0]
-                index_local = ret[1]
-            elif isinstance(print_val, int):
-                ret = self.printf_int(print_val, index_local)
-                ll_out += ret[0]
-                index_local = ret[1]
-            elif isinstance(print_val, str):
-                ret = self.printf_char(print_val, index_local)
-                ll_out += ret[0]
-                index_local = ret[1]
-            return ll_out, index_local
+        if defn and func.body is not None:
+            return None
+        # Get function parameters
+        print_val = func.value
+        if isinstance(print_val, float):
+            print_val = array("f", [print_val])[0]
+            ret = self.printf_float(print_val, index_local)
+            ll_out += ret[0]
+            index_local = ret[1]
+        elif isinstance(print_val, int):
+            ret = self.printf_int(print_val, index_local)
+            ll_out += ret[0]
+            index_local = ret[1]
+        elif isinstance(print_val, str):
+            ret = self.printf_char(print_val, index_local)
+            ll_out += ret[0]
+            index_local = ret[1]
+        return ll_out, index_local
 
     def ast_convert(self):
         """
@@ -377,11 +414,13 @@ class LLVM:
         """
         pass
 
-    def convertNode(self, input_node: Node, global_scope: bool = False, index: int = 1) -> int:
+    def convert_node(
+        self, input_node: Node, global_scope: bool = False, index: int = 1
+    ) -> int:
         """
         Writes LLVM code for a node type object
         """
-        with open(self.file_name, 'a') as f:
+        with open(self.file_name, "a") as f:
             # if isinstance(input_node , VarNode):
             #     f.write(self.var_node_convert(input_node , global_scope))
             if isinstance(input_node, PrintfAST):
@@ -389,13 +428,13 @@ class LLVM:
                 node.value = input_node.children[0].value
                 if len(self.index_queue) == 0:
                     self.index_queue.append(index)
-                ret = self.functionNodeConvert(node, index_local=index)
+                ret = self.function_node_convert(node, index_local=index)
                 f.write(ret[0])
                 index = ret[1]
             if isinstance(input_node, FunctionNode):
                 if len(self.index_queue) == 0:
                     self.index_queue.append(index)
-                ret = self.functionNodeConvert(input_node, index_local=index)
+                ret = self.function_node_convert(input_node, index_local=index)
                 f.write(ret[0])
                 # self.index_queue.insert(0, ret[1])
                 index = ret[1]
@@ -405,8 +444,6 @@ class LLVM:
         """
         Converts the AST given in the constructor to LLVM code and writes the code to file
         """
-        # clear file
-        f = open(self.file_name, 'w')
         # indexes = {"printf": 1}
         # get all the nodes via DFS
         # DFS the condition
@@ -417,9 +454,15 @@ class LLVM:
             if temp not in visited:
                 # if a scope, skip
                 # if include instruction, skip
-                if isinstance(temp, FuncDeclAST) or isinstance(temp, FuncDefnAST) or \
-                        isinstance(temp, PrintfAST) or isinstance(temp, ScanfAST) or isinstance(temp, ArrayDeclAST) or \
-                    isinstance(temp, IncludeAST):
+                if isinstance(
+                    temp,
+                    FuncDeclAST
+                    | FuncDefnAST
+                    | PrintfAST
+                    | ScanfAST
+                    | ArrayDeclAST
+                    | IncludeAST,
+                ):
                     visited.append(temp)
                 if isinstance(temp, AST):
                     for child in temp.children:
@@ -429,57 +472,22 @@ class LLVM:
         string_local = ""
         index = 1
         for instruction in visited:
-
-            if isinstance(instruction, PrintfAST) or isinstance(instruction, ScanfAST) or isinstance(instruction, IncludeAST):
-                temp_global , index = instruction.llvm_global(index)
+            if isinstance(instruction, PrintfAST | ScanfAST | IncludeAST):
+                temp_global, index = instruction.llvm_global(index)
             else:
-                temp_global , index = instruction.llvm(False, index)
+                temp_global, index = instruction.llvm(False, index)
                 # write the llvm code for all global variables for the instruction
                 # temp_local, index = instruction.llvm(True, index)
                 # string_local += temp_local
             string_global += temp_global
-        f.write(string_global)
-        f.write(string_local)
-        print("Done!!!")
-        # for entry in self.symbol_table.table:
-        #     node = copy.copy(entry.object)
-        #     if isinstance(entry, FuncSymbolEntry):
-        #         node.key = entry.name
-        #         if entry.name == "printf":
-        #             i = indexes["printf"]
-        #             defn = True
-        #             declr = (i == 1)
-        #             self.index_queue.append(i)
-        #             i = self.functionNodeConvert(entry.object, declr=declr, defn=defn, glob_decl=True,
-        #                                          index_global=i) + 1
-        #             indexes["printf"] = i
-        #     if isinstance(node, VarNode):
-        #         self.var_node_convert(node, True)
-        #     # elif isinstance(node, list):
-        #     #     i = 1
-        #     #     defn = True
-        #     #     declr = True
-        #     #     for val in node:
-        #     #         if isinstance(entry, FunctionNode):
-        #     #             self.index_queue.append(i)
-        #     #             i = self.functionNodeConvert(entry, declr=declr, defn=defn, glob_decl=True, index_global=i) + 1
-        #     #             defn = False
-        #     #             declr = False
-        # # begin of the main function
-        # with open(self.file_name, 'a') as f:
-        #     f.write("define dso_local i32 @main () {\n")
-        #
-        # self.ast_convert()
-        # i = 1
-        # for node in self.nodes:
-        #     i = self.convertNode(node, False, index=i)
-        #
-        # # end of main
-        # with open(self.file_name, 'a') as f:
-        #     f.write("\tret i32 0\n}")
+        with open(self.file_name, "w") as f:
+            f.write(string_global)
+            f.write(string_local)
 
-    def execute(self):
+    def execute(self) -> subprocess.CompletedProcess[str]:
         """
         Runs the generated llvm file
         """
-        subprocess.run(["lli", "-opaque-pointers", self.file_name])
+        return subprocess.run(
+            ["lli", "-opaque-pointers", self.file_name], capture_output=True, text=True
+        )
