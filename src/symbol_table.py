@@ -5,7 +5,7 @@ from .symbol_entry import FuncSymbolEntry, SymbolEntry
 
 
 class SymbolTable:
-    def __init__(self, in_owner= None) -> None:
+    def __init__(self, in_owner=None) -> None:
         self.table: list[SymbolEntry] = []
         self.parent: SymbolTable | None = None
         self.owner = in_owner
@@ -89,16 +89,16 @@ class SymbolTable:
                 if new_length > max_width:
                     max_width = new_length
             if isinstance(entry, SymbolEntry) and entry.object and entry.object.ptr:
-                    new_length = 0
-                    temp_value = entry.object.value
-                    while isinstance(temp_value, VarNode):
-                        temp_value = temp_value.value
-                    if isinstance(temp_value, VarNode):
-                        new_length += len(temp_value.get_str()) + 2
-                    else:
-                        new_length += len(str(temp_value)) + 2
-                    if new_length > max_width:
-                        max_width = new_length
+                new_length = 0
+                temp_value = entry.object.value
+                while isinstance(temp_value, VarNode):
+                    temp_value = temp_value.value
+                if isinstance(temp_value, VarNode):
+                    new_length += len(temp_value.get_str()) + 2
+                else:
+                    new_length += len(str(temp_value)) + 2
+                if new_length > max_width:
+                    max_width = new_length
             if entry.array:
                 new_length = 0
                 for value in entry.object.values:
@@ -110,21 +110,21 @@ class SymbolTable:
         print(f"{'|':<2}{'Name':<15}{'|':<2}{'Value':<{max_width}}{'|':<2}")
         under = ""
         for i in range(21 + max_width):
-            under += '-'
+            under += "-"
         print(under)
         for item in self.table:
             Object = item.object
             name = item.name
             value = Object.value
             if value is None and not item.array:
-                value = 'None'
+                value = "None"
             elif item.array:
                 value = f"{Object.values}"
             elif isinstance(Object, VarNode) and Object.ptr:
                 while isinstance(value, VarNode):
                     value = value.value
                 if value is None:
-                    value = 'None'
+                    value = "None"
             if isinstance(item, FuncSymbolEntry):
                 value = item.get_str()
                 print(f"{'|':<2}{name:<15}{'|':<2}{value:<{max_width}}{'|':<2}")
@@ -133,7 +133,9 @@ class SymbolTable:
                 # |--------------- | ----------------
                 # | int a          | 1
 
-                print(f"{'|':<2}{name:<15}{'|':<2}{value:<{max_width}}{'|':<2}{'Used' if item.used else 'Unused':<5}{'|':<2}")
+                print(
+                    f"{'|':<2}{name:<15}{'|':<2}{value:<{max_width}}{'|':<2}{'Used' if item.used else 'Unused':<5}{'|':<2}"
+                )
         print(under)
 
         # if print_each, print for each entry it's symbol table

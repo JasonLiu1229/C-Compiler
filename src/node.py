@@ -29,7 +29,7 @@ class Node:
     #     return not self.__eq__(o)
 
     def __repr__(self) -> str:
-        return f'{self.key} : {self.value}'
+        return f"{self.key} : {self.value}"
 
     def print(self):
         """
@@ -61,7 +61,10 @@ class Node:
                 self.value = ord(self.value)
             if isinstance(other.value, str):
                 other.value = ord(other.value)
-            return Node(f"{'float' if not (isinstance(self.value, int) or isinstance(other.value, int)) else 'int'}", self.value / other.value)
+            return Node(
+                f"{'float' if not (isinstance(self.value, int) or isinstance(other.value, int)) else 'int'}",
+                self.value / other.value,
+            )
         else:
             raise ZeroDivisionError
 
@@ -234,10 +237,20 @@ class Node:
             self.register = None
         register.update(self)
 
-class VarNode(Node):
 
-    def __init__(self, key: str, value, vtype: str, const: bool = None, ptr: bool = False, deref_level: int = 0,
-                 total_deref: int = 0, const_ptr: bool = False, is_array: bool = False) -> None:
+class VarNode(Node):
+    def __init__(
+        self,
+        key: str,
+        value,
+        vtype: str,
+        const: bool = None,
+        ptr: bool = False,
+        deref_level: int = 0,
+        total_deref: int = 0,
+        const_ptr: bool = False,
+        is_array: bool = False,
+    ) -> None:
         """
         Initializer function for VarNode
         """
@@ -257,8 +270,11 @@ class VarNode(Node):
     def __eq__(self, o):
         if not isinstance(o, VarNode):
             return False
-        return self.key == o.key and (
-                self.const == o.const or (self.const is None and o.const is not None)) and self.ptr == o.ptr
+        return (
+            self.key == o.key
+            and (self.const == o.const or (self.const is None and o.const is not None))
+            and self.ptr == o.ptr
+        )
 
     def __ne__(self, o):
         return not self.__eq__(o)
@@ -305,11 +321,11 @@ class VarNode(Node):
         dot format
         :return: string
         """
-        out = '\"' + self.type + ' ' + self.key + '\"' + '\t' + '->' + '\t'
+        out = '"' + self.type + " " + self.key + '"' + "\t" + "->" + "\t"
         if isinstance(self.value, VarNode):
             out += self.value.save_dot()
         elif isinstance(self.value, str):
-            out += '\"\\' + self.value + '\"'
+            out += '"\\' + self.value + '"'
         else:
             out += str(self.value)
         return out
@@ -332,7 +348,7 @@ class VarNode(Node):
             elif self.type == "float":
                 self.value = 0.0
             elif self.type == "char":
-                self.value = ord('\0')
+                self.value = ord("\0")
         # Scope and constant
         if scope and not self.const:
             out = f"%{index} = "
@@ -340,7 +356,7 @@ class VarNode(Node):
             out = f"@{index} = "
 
         if self.const:
-            out += 'constant '
+            out += "constant "
         elif not scope:
             out += "global "
         elif scope:
@@ -367,12 +383,12 @@ class VarNode(Node):
             if self.type == "float" and not self.ptr:
                 if self.value is None:
                     self.value = 0.0
-                val = array('f', [self.value])
+                val = array("f", [self.value])
                 self.value = val[0]
                 out_val = str(val[0])
             elif isinstance(self.value, str) and not self.ptr:
                 if self.value is None:
-                    self.value = '\0'
+                    self.value = "\0"
                 out_val = str(ord(self.value))
             else:
                 if self.value is None:
@@ -387,7 +403,7 @@ class VarNode(Node):
                 out += f"store {var_type} {out_val}, ptr %{index}, align 4\n"
             else:
                 if isinstance(self.value, float):
-                    val = array('f', [self.value])
+                    val = array("f", [self.value])
                     self.value = val[0]
                     out += out_val + "\n"
                 elif isinstance(self.value, str):
@@ -438,7 +454,7 @@ class VarNode(Node):
 
         # get right value
         if isinstance(self.value, str):
-            out_val = f"\'{self.value}\'"
+            out_val = f"'{self.value}'"
         else:
             out_val = f"{self.value}"
 
@@ -457,7 +473,13 @@ class VarNode(Node):
                 else:
                     out_local = f"\tli ${self.register.name}, {out_val}"
             else:
-                out_type = "int" if self.type == "int" else "float" if self.type == "flt" else "chr"
+                out_type = (
+                    "int"
+                    if self.type == "int"
+                    else "float"
+                    if self.type == "flt"
+                    else "chr"
+                )
                 out_local += f"\tlw{'c1' if self.type == 'float' else ''} ${self.register.name}, {out_type}_{self.key}\n"
             self.register.shuffle()
             out_local += f"\t\t# {self.get_str()}\n"
@@ -480,23 +502,41 @@ class VarNode(Node):
 
 
 class ArrayNode(VarNode):
-
-    def __init__(self, key: str, value, vtype: str, const: bool = None, ptr: bool = False, deref_level: int = 0,
-                 total_deref: int = 0, const_ptr: bool = False, is_array: bool = True, in_size: int = 0,
-                 in_values=None) -> None:
-        super().__init__(key, value, vtype, const, ptr, deref_level, total_deref, const_ptr, is_array)
+    def __init__(
+        self,
+        key: str,
+        value,
+        vtype: str,
+        const: bool = None,
+        ptr: bool = False,
+        deref_level: int = 0,
+        total_deref: int = 0,
+        const_ptr: bool = False,
+        is_array: bool = True,
+        in_size: int = 0,
+        in_values=None,
+    ) -> None:
+        super().__init__(
+            key, value, vtype, const, ptr, deref_level, total_deref, const_ptr, is_array
+        )
         if in_values is None:
             in_values = []
         self.values: [VarNode | Node] = []
         self.size = in_size
 
     def __repr__(self) -> str:
-        return f"{self.type} {'*' * self.total_deref} {self.key} [{self.size if self.size > 0 else ''}] : " \
-               f"[{', '.join([v.value for v in self.values])}]" if self.values else f"{super().__repr__()}"
+        return (
+            f"{self.type} {'*' * self.total_deref} {self.key} [{self.size if self.size > 0 else ''}] : "
+            f"[{', '.join([v.value for v in self.values])}]"
+            if self.values
+            else f"{super().__repr__()}"
+        )
 
     def save(self):
-        out_key = f"{'const ' if self.const else ''}{self.type}{'*' * (self.total_deref - self.deref_level)}" \
-                  f" {self.key}[{self.size if self.size > 0 else ''}]"
+        out_key = (
+            f"{'const ' if self.const else ''}{self.type}{'*' * (self.total_deref - self.deref_level)}"
+            f" {self.key}[{self.size if self.size > 0 else ''}]"
+        )
         out = {out_key: [value.save() for value in self.values]}
         return out
 
@@ -505,24 +545,55 @@ class ArrayNode(VarNode):
         return f"{'const ' if self.const else ''}{self.type}{'*' * (self.total_deref - self.deref_level)} {self.key}"
 
     def __eq__(self, o):
-        return isinstance(o, ArrayNode) and self.key == o.key and self.type == o.type and self.const == o.const and \
-                  self.ptr == o.ptr and self.deref_level == o.deref_level and self.total_deref == o.total_deref and \
-                    self.const_ptr == o.const_ptr and self.size == o.size
+        return (
+            isinstance(o, ArrayNode)
+            and self.key == o.key
+            and self.type == o.type
+            and self.const == o.const
+            and self.ptr == o.ptr
+            and self.deref_level == o.deref_level
+            and self.total_deref == o.total_deref
+            and self.const_ptr == o.const_ptr
+            and self.size == o.size
+        )
+
     def __ne__(self, o):
         return not self.__eq__(o)
 
 
 class FuncParameter(VarNode):
-
-    def __init__(self, key: str, value, vtype: str, const: bool = None, ptr: bool = False, deref_level: int = 0,
-                 total_deref: int = 0, const_ptr: bool = False, reference: bool = False, is_array = False) -> None:
-        super().__init__(key, value, vtype, const, ptr, deref_level, total_deref, const_ptr, is_array)
+    def __init__(
+        self,
+        key: str,
+        value,
+        vtype: str,
+        const: bool = None,
+        ptr: bool = False,
+        deref_level: int = 0,
+        total_deref: int = 0,
+        const_ptr: bool = False,
+        reference: bool = False,
+        is_array=False,
+    ) -> None:
+        super().__init__(
+            key, value, vtype, const, ptr, deref_level, total_deref, const_ptr, is_array
+        )
         self.reference = reference
         # if it is a pointer, create a new variable for each deref
         if self.ptr:
             new_values = []
             for i in range(self.total_deref):
-                new_val = VarNode(f"{self.key}_{i}", self.value, self.type, self.const, self.ptr, i, self.total_deref, self.const_ptr, self.array)
+                new_val = VarNode(
+                    f"{self.key}_{i}",
+                    self.value,
+                    self.type,
+                    self.const,
+                    self.ptr,
+                    i,
+                    self.total_deref,
+                    self.const_ptr,
+                    self.array,
+                )
                 new_values.append(new_val)
                 if i > 0:
                     new_values[i - 1].value = new_val
@@ -536,8 +607,10 @@ class FuncParameter(VarNode):
         return f"{'& ' if self.reference else ''}{super().__repr__()}"
 
     def save(self):
-        out_key = f"{'const ' if self.const else ''}{self.type}{'*' * (self.total_deref - self.deref_level)}" \
-                  f"{' &' if self.reference else ' '}{self.key}"
+        out_key = (
+            f"{'const ' if self.const else ''}{self.type}{'*' * (self.total_deref - self.deref_level)}"
+            f"{' &' if self.reference else ' '}{self.key}"
+        )
         if isinstance(self.value, VarNode):
             out = {out_key: self.value.save()}
         else:
@@ -546,7 +619,6 @@ class FuncParameter(VarNode):
 
 
 class FunctionNode(Node):
-
     def __init__(self, key: str, ret_type: str = None, in_const: bool = False) -> None:
         """
         Initializer
@@ -594,7 +666,7 @@ class FunctionNode(Node):
         string version of FunctionNode
         :return: string
         """
-        out = self.key + '\t' + ':' + '\t'
+        out = self.key + "\t" + ":" + "\t"
         for key, val in self.value.items():
             if isinstance(val, Node):
                 out += str(key) + "=" + str(val.value)
@@ -607,7 +679,7 @@ class FunctionNode(Node):
         dot format of FunctionNode
         :return: string
         """
-        out = '\"' + self.key + '\"' + '\t' + '->' + '\t'
+        out = '"' + self.key + '"' + "\t" + "->" + "\t"
         for key, val in self.value.items():
             if isinstance(val, Node):
                 out += str(key) + "=" + str(val.value)
