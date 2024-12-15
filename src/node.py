@@ -163,7 +163,7 @@ class Node:
         converts Node in a string format
         :return:
         """
-        return f"{self.key}\t:\t{str(self.value)}"
+        return f"{self.key}\t:\t{self.value!s}"
 
     def save_dot(self):
         """
@@ -191,7 +191,7 @@ class Node:
             dictionary[name].add(self.value)
 
     def llvm(self, scope: bool = False, index: int = 0) -> tuple[str, int]:
-        return f" ", index
+        return " ", index
 
     def mips(self, registers):
         out_global = ""
@@ -373,7 +373,7 @@ class VarNode(Node):
             elif self.type == "float":
                 var_type = "i32"
                 out += "float "
-            out += f" , align 4\n"
+            out += " , align 4\n"
         else:
             out += f"ptr @{index}, align 8\n"
         # align

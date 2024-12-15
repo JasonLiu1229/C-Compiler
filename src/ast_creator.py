@@ -832,7 +832,7 @@ class AstCreator(FileVisitor):
                             else:
                                 error = f"Too many arguments passed to function {entry.name}, expected {len(entry.parameters)}, got {len(ast.args)}\n"
                             # get instruction in the file where the warning is by using column and line number
-                            f = open(self.file_name, "r")
+                            f = open(self.file_name)
                             lines = f.readlines()
                             line = lines[ast.line - 1]
                             f.close()
@@ -913,7 +913,7 @@ class AstCreator(FileVisitor):
                             f"Redeclaration of function {ast.root.key} with different number of parameters"
                         )
                     for param in ast.params:
-                        if not param in match.parameters:
+                        if param not in match.parameters:
                             raise AttributeError(
                                 f"Redeclaration of function {ast.root.key} with different parameters"
                             )
@@ -982,7 +982,7 @@ class AstCreator(FileVisitor):
                                 f"Redefinition of function {ast.root.key} with different number of parameters"
                             )
                         for param in new_entry.parameters:
-                            if not param in match.parameters:
+                            if param not in match.parameters:
                                 raise AttributeError(
                                     f"Redefinition of function {ast.root.key} with different parameters"
                                 )
@@ -1145,7 +1145,7 @@ class AstCreator(FileVisitor):
                             temp_symbol = temp_symbol.parent
                             if temp_symbol is None:
                                 # get instruction in the file where the warning is by using column and line number
-                                f = open(self.file_name, "r")
+                                f = open(self.file_name)
                                 lines = f.readlines()
                                 line = lines[ast.line - 1]
                                 f.close()
@@ -1277,7 +1277,7 @@ class AstCreator(FileVisitor):
                             temp_symbol = temp_symbol.parent
                             if temp_symbol is None:
                                 # get instruction in the file where the warning is by using column and line number
-                                f = open(self.file_name, "r")
+                                f = open(self.file_name)
                                 lines = f.readlines()
                                 line = lines[ast.line - 1]
                                 f.close()
@@ -1364,7 +1364,7 @@ class AstCreator(FileVisitor):
                         raise ReferenceError(
                             f"Variable {ast.incr.children[0].key} was not declared"
                         )
-                    raise ReferenceError(f"Incrementer must be a variable")
+                    raise ReferenceError("Incrementer must be a variable")
                 # ast.incr.children[0] = entry
                 # entry.parent = ast.incr
                 ast.children[0].children.append(
@@ -1390,7 +1390,7 @@ class AstCreator(FileVisitor):
             elif ast.root.key == "assign" and ast.root.value is not None:
                 if not isinstance(ast.children[0], VarNode):
                     raise AttributeError(
-                        f"Attempting to assign to a non variable type object"
+                        "Attempting to assign to a non variable type object"
                     )
                 if not evaluate:
                     node = ast
@@ -1500,7 +1500,7 @@ class AstCreator(FileVisitor):
                             ):
                                 warning_str += f"implicit conversion from '{ast.children[i].type}' to '{ast.type}' changes value from {ast.children[i].value} to {self.convert(ast.children[i].value, ast.type)}"
                             # get instruction in the file where the warning is by using column and line number
-                            f = open(self.file_name, "r")
+                            f = open(self.file_name)
                             lines = f.readlines()
                             line = lines[ast.line - 1]
                             f.close()
@@ -1551,13 +1551,13 @@ class AstCreator(FileVisitor):
                     not isinstance(assignee, VarNode)
                     and not isinstance(assignee.parent, ArrayNode)
                 ) and evaluate:
-                    raise AttributeError(f"Attempting to assign to a non-variable type")
+                    raise AttributeError("Attempting to assign to a non-variable type")
                 elif (
                     not evaluate
                     and not isinstance(assignee, Node)
                     and assignee.key != "var"
                 ):
-                    raise AttributeError(f"Attempting to assign to a non-variable type")
+                    raise AttributeError("Attempting to assign to a non-variable type")
                 if isinstance(assignee.parent, ArrayNode):
                     if assignee.parent.const:
                         raise AttributeError(
@@ -1748,8 +1748,8 @@ class AstCreator(FileVisitor):
                     handle = True
                     for val in ast.children:
                         if (
-                            isinstance(val, Node)
-                            and val.key == "var"
+                            (isinstance(val, Node)
+                            and val.key == "var")
                             or isinstance(val, AST)
                         ):
                             node = ast
@@ -1804,7 +1804,7 @@ class AstCreator(FileVisitor):
                     for warning in warnings_handle:
                         # get line where warning is
                         warning_str = "\033[95mwarning: \033[0m"
-                        f = open(self.file_name, "r")
+                        f = open(self.file_name)
                         lines = f.readlines()
                         f.close()
                         line = lines[ast.line - 1]
@@ -1840,7 +1840,7 @@ class AstCreator(FileVisitor):
                     for warning in warnings_handle:
                         # get line where warning is
                         warning_str = "\033[95mwarning: \033[0m"
-                        f = open(self.file_name, "r")
+                        f = open(self.file_name)
                         lines = f.readlines()
                         f.close()
                         line = lines[ast.line - 1]
@@ -2496,8 +2496,8 @@ class AstCreator(FileVisitor):
                     # return utf-8 null character
                     return value
                 return chr(value)
-        except Exception:
-            raise RuntimeError("Bad Cast")
+        except Exception as err:
+            raise RuntimeError("Bad Cast") from err
 
     def warn(self):
         """
